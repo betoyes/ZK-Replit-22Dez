@@ -7,7 +7,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import { ArrowLeft, Plus } from 'lucide-react';
+import { ArrowLeft, Plus, ArrowRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export default function Product() {
@@ -81,14 +81,24 @@ export default function Product() {
             </p>
 
             <div className="space-y-6 mb-16">
-              <Button 
-                size="lg" 
-                className="w-full rounded-none h-16 bg-foreground text-background hover:bg-foreground/90 font-mono text-xs uppercase tracking-widest flex items-center justify-between px-8"
-                onClick={handleAddToCart}
-              >
-                <span>Adicionar</span>
-                <Plus className="h-4 w-4" />
-              </Button>
+              <div className="grid grid-cols-2 gap-4">
+                <Button 
+                  size="lg" 
+                  className="w-full rounded-none h-16 bg-transparent border border-black text-black hover:bg-black hover:text-white font-mono text-xs uppercase tracking-widest flex items-center justify-center px-8"
+                  onClick={handleAddToCart}
+                >
+                  <span>Adicionar à Sacola</span>
+                </Button>
+                <Link href="/checkout">
+                  <Button 
+                    size="lg" 
+                    className="w-full rounded-none h-16 bg-black text-white hover:bg-primary font-mono text-xs uppercase tracking-widest flex items-center justify-between px-8"
+                  >
+                    <span>Comprar Agora</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+              </div>
               
               <div className="font-mono text-[10px] uppercase tracking-widest text-center text-muted-foreground">
                 Envio Global Grátis • Garantia Vitalícia

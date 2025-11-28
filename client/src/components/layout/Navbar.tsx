@@ -52,7 +52,7 @@ export function Navbar() {
             <div className="hidden lg:flex items-center gap-8 ml-8">
               {['Loja', 'Coleções', 'Journal', 'Lookbook'].map((item) => {
                 const href = item === 'Loja' ? '/shop' : 
-                             item === 'Coleções' ? '/shop' : 
+                             item === 'Coleções' ? '/collections' : 
                              item === 'Journal' ? '/journal' :
                              item === 'Lookbook' ? '/lookbook' : '/about';
                 return (

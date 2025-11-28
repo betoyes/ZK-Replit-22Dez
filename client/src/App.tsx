@@ -22,6 +22,7 @@ import Contact from "@/pages/Contact";
 import Wishlist from "@/pages/Wishlist";
 import Journal from "@/pages/Journal";
 import Lookbook from "@/pages/Lookbook";
+import Collections from "@/pages/Collections";
 
 function Router() {
   return (
@@ -31,7 +32,7 @@ function Router() {
         <Route path="/login" component={Login} />
         <Route path="/account" component={Account} />
         <Route path="/shop" component={Shop} />
-        <Route path="/collections" component={Shop} /> {/* Alias for Shop */}
+        <Route path="/collections" component={Collections} />
         <Route path="/product/:id" component={Product} />
         <Route path="/cart" component={Cart} />
         <Route path="/checkout" component={Checkout} />
