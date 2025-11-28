@@ -1,17 +1,21 @@
+import { useState } from 'react';
 import { Link } from 'wouter';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { ArrowDown, ArrowUpRight, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { collections } from '@/lib/mockData';
 import { useProducts } from '@/context/ProductContext';
 import heroImage from '@assets/generated_images/luxury_jewelry_hero_image_with_model.png';
 import necklaceImage from '@assets/generated_images/gold_necklace_product_shot.png';
+import campaignVideo from '@assets/generated_videos/b&w_jewelry_fashion_b-roll.mp4';
 
 export default function Home() {
   const { products } = useProducts();
   const { scrollY } = useScroll();
   const y1 = useTransform(scrollY, [0, 500], [0, 200]);
   const y2 = useTransform(scrollY, [0, 500], [0, -100]);
+  const [isVideoOpen, setIsVideoOpen] = useState(false);
   
   return (
     <div className="min-h-screen bg-background text-foreground overflow-hidden">
@@ -44,12 +48,24 @@ export default function Home() {
           </div>
 
           <div className="flex justify-between items-end pointer-events-auto">
-            <button className="group flex items-center gap-4">
-              <div className="h-12 w-12 rounded-full border border-white/30 flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all">
-                <Play className="h-4 w-4 fill-current" />
-              </div>
-              <span className="font-mono text-xs tracking-widest uppercase hidden md:block">Ver Campanha</span>
-            </button>
+            <Dialog open={isVideoOpen} onOpenChange={setIsVideoOpen}>
+              <DialogTrigger asChild>
+                <button className="group flex items-center gap-4">
+                  <div className="h-12 w-12 rounded-full border border-white/30 flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all">
+                    <Play className="h-4 w-4 fill-current" />
+                  </div>
+                  <span className="font-mono text-xs tracking-widest uppercase hidden md:block">Ver Campanha</span>
+                </button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[800px] p-0 bg-black border-none overflow-hidden aspect-video">
+                <video 
+                  src={campaignVideo} 
+                  controls 
+                  autoPlay 
+                  className="w-full h-full object-cover"
+                />
+              </DialogContent>
+            </Dialog>
             
             <Link href="/shop">
               <Button variant="outline" className="rounded-full px-8 py-6 bg-transparent text-white border-white hover:bg-white hover:text-black font-mono text-xs tracking-widest uppercase transition-all">
