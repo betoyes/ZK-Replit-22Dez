@@ -118,11 +118,11 @@ export default function Home() {
           transition={{ repeat: Infinity, duration: 20, ease: "linear" }}
           className="flex gap-12 font-display text-8xl md:text-9xl font-bold tracking-tighter uppercase opacity-20"
         >
-          <span>Aurum</span>
+          <span>ZK REZK</span>
           <span>Eterno</span>
           <span>Moderno</span>
           <span>Luxo</span>
-          <span>Aurum</span>
+          <span>ZK REZK</span>
           <span>Eterno</span>
           <span>Moderno</span>
           <span>Luxo</span>

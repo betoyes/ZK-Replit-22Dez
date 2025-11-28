@@ -10,7 +10,7 @@ export function Footer() {
           {/* Brand / Big Logo */}
           <div className="md:col-span-6 flex flex-col justify-between h-full">
             <div className="font-display text-[10vw] leading-[0.8] font-bold tracking-tighter opacity-10 select-none">
-              AURUM
+              ZK REZK
             </div>
             <div className="mt-8 max-w-sm">
               <p className="font-mono text-xs text-muted-foreground uppercase leading-relaxed">
@@ -50,7 +50,7 @@ export function Footer() {
         </div>
 
         <div className="border-t border-border pt-8 flex flex-col md:flex-row justify-between items-center gap-4 font-mono text-[10px] text-muted-foreground uppercase tracking-widest">
-          <p>&copy; 2025 AURUM JEWELRY. TODOS OS DIREITOS RESERVADOS.</p>
+          <p>&copy; 2025 ZK REZK JEWELRY. TODOS OS DIREITOS RESERVADOS.</p>
           <div className="flex gap-8">
             <a href="#" className="hover:text-foreground">Política de Privacidade</a>
             <a href="#" className="hover:text-foreground">Termos de Uso</a>

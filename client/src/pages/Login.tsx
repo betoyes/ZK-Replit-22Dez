@@ -52,7 +52,7 @@ export default function Login() {
       // Mock Registration
       toast({
         title: "Conta criada",
-        description: "Bem-vindo ao Aurum.",
+        description: "Bem-vindo ao ZK REZK.",
       });
       setTimeout(() => setLocation('/account'), 1000);
     }
@@ -63,7 +63,7 @@ export default function Login() {
       {/* Editorial Side */}
       <div className="hidden md:flex w-1/2 bg-black text-white p-12 flex-col justify-between relative overflow-hidden">
         <div className="z-10">
-          <Link href="/" className="font-display text-3xl font-bold tracking-tighter">AURUM®</Link>
+          <Link href="/" className="font-display text-3xl font-bold tracking-tighter">ZK REZK®</Link>
         </div>
         
         <div className="z-10 max-w-md space-y-6">
@@ -85,7 +85,7 @@ export default function Login() {
           <div>
             <h1 className="font-display text-4xl mb-2">{isLogin ? 'Entrar' : 'Criar Conta'}</h1>
             <p className="text-muted-foreground font-mono text-xs uppercase tracking-widest">
-              {isLogin ? 'Bem-vindo de volta ao círculo interno.' : 'Junte-se ao Aurum Archive.'}
+              {isLogin ? 'Bem-vindo de volta ao círculo interno.' : 'Junte-se ao ZK REZK Archive.'}
             </p>
             
             {/* Demo Credentials Box */}

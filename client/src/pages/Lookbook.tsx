@@ -76,7 +76,7 @@ export default function Lookbook() {
 
       <div className="h-[50vh] flex items-center justify-center bg-white text-black">
         <div className="text-center">
-          <h2 className="font-display text-6xl mb-8">Descubra Aurum</h2>
+          <h2 className="font-display text-6xl mb-8">Descubra ZK REZK</h2>
           <a href="/shop" className="inline-block border-b border-black pb-1 font-mono text-sm uppercase tracking-widest hover:text-black/60 transition-colors">
             Ir para a Loja
           </a>

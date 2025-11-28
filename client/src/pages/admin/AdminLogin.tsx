@@ -49,7 +49,7 @@ export default function AdminLogin() {
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-white/10 mb-6">
             <Lock className="h-5 w-5 text-white" />
           </div>
-          <h1 className="font-display text-3xl mb-2 tracking-tight">Aurum Admin</h1>
+          <h1 className="font-display text-3xl mb-2 tracking-tight">ZK REZK Admin</h1>
           <p className="font-mono text-xs text-white/50 uppercase tracking-widest">
             Acesso Restrito
           </p>

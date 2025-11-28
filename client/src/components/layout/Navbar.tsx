@@ -47,7 +47,7 @@ export function Navbar() {
           {/* Logo - Left Aligned for Modern Feel */}
           <div className="z-50 flex items-center gap-8">
             <Link href="/" className="font-display text-2xl md:text-3xl font-bold tracking-tighter hover:opacity-70 transition-opacity">
-              AURUM®
+              ZK REZK®
             </Link>
             
             {/* Desktop Links - Moved here for better layout balance */}
@@ -123,7 +123,7 @@ export function Navbar() {
                         ))}
                       </div>
                       <div className="font-mono text-xs tracking-widest text-white/50">
-                        AURUM JEWELRY © 2025
+                        ZK REZK JEWELRY © 2025
                       </div>
                     </div>
                   </SheetContent>

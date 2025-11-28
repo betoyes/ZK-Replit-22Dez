@@ -65,7 +65,7 @@ export default function Account() {
                   <div className="border border-border p-6 hover:border-black transition-colors group">
                     <div className="flex flex-col md:flex-row justify-between mb-6 pb-6 border-b border-border">
                       <div className="space-y-1">
-                        <span className="font-mono text-xs text-muted-foreground uppercase tracking-widest block">Pedido #AUR-8921</span>
+                        <span className="font-mono text-xs text-muted-foreground uppercase tracking-widest block">Pedido #ZK-8921</span>
                         <span className="font-mono text-xs block">28 Nov, 2025</span>
                       </div>
                       <div className="mt-4 md:mt-0">

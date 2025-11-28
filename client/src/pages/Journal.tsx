@@ -13,7 +13,7 @@ export default function Journal() {
            <div>
              <h1 className="font-display text-6xl md:text-8xl font-bold tracking-tighter mb-4">Journal</h1>
              <p className="font-mono text-sm text-muted-foreground uppercase tracking-widest max-w-md">
-               Histórias, inspirações e o mundo Aurum.
+               Histórias, inspirações e o mundo ZK REZK.
              </p>
            </div>
            <div className="font-mono text-xs mt-4 md:mt-0">

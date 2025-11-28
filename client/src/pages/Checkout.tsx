@@ -64,7 +64,7 @@ export default function Checkout() {
         </motion.div>
         <h1 className="font-serif text-4xl mb-4">Obrigado pela sua compra!</h1>
         <p className="text-muted-foreground mb-8 max-w-md">
-          Seu pedido #AURUM-8921 foi confirmado. Você receberá um email com os detalhes de rastreamento assim que o envio for processado.
+          Seu pedido #ZK-8921 foi confirmado. Você receberá um email com os detalhes de rastreamento assim que o envio for processado.
         </p>
         <Link href="/">
           <Button className="rounded-none uppercase tracking-widest px-8">Voltar para Home</Button>

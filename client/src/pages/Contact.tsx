@@ -58,7 +58,7 @@ export default function Contact() {
               <Mail className="h-6 w-6 text-primary shrink-0 mt-1" />
               <div>
                 <h3 className="font-serif text-lg mb-1">Email</h3>
-                <p className="text-muted-foreground">contato@aurum.com.br</p>
+                <p className="text-muted-foreground">contato@zkrezk.com</p>
               </div>
             </div>
           </div>

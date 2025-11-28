@@ -11,7 +11,7 @@ export default function About() {
         >
           <h1 className="font-serif text-5xl mb-8">Nossa História</h1>
           <p className="text-xl text-muted-foreground leading-relaxed mb-12 font-light">
-            Fundada em 1985, a AURUM nasceu do desejo de criar joias que não fossem apenas acessórios, mas extensões da personalidade de quem as usa.
+            Fundada em 1985, a ZK REZK nasceu do desejo de criar joias que não fossem apenas acessórios, mas extensões da personalidade de quem as usa.
           </p>
         </motion.div>
 
