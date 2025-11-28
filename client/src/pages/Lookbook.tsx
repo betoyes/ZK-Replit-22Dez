@@ -1,6 +1,7 @@
 import { useProducts } from '@/context/ProductContext';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { useRef } from 'react';
+import lookbookVideo from '@assets/generated_videos/cinematic_black_and_white_jewelry_fashion_video.mp4';
 
 export default function Lookbook() {
   const { collections } = useProducts();
@@ -13,7 +14,17 @@ export default function Lookbook() {
   return (
     <div ref={ref} className="bg-black text-white">
       <div className="h-screen flex items-center justify-center sticky top-0 overflow-hidden">
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1531995811006-35cb42e1a022?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-40" />
+        <div className="absolute inset-0 opacity-60">
+          <video 
+            autoPlay 
+            loop 
+            muted 
+            playsInline 
+            className="w-full h-full object-cover"
+          >
+            <source src={lookbookVideo} type="video/mp4" />
+          </video>
+        </div>
         <div className="relative z-10 text-center px-6">
           <motion.h1 
             initial={{ opacity: 0, y: 50 }}
@@ -30,7 +41,7 @@ export default function Lookbook() {
       </div>
 
       {collections.map((collection, i) => (
-        <div key={collection.id} className="min-h-screen flex items-center justify-center relative py-24 border-t border-white/10">
+        <div key={collection.id} className="min-h-screen flex items-center justify-center relative py-24 border-t border-white/10 bg-black">
           <div className="container mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-24 items-center">
             <motion.div 
               initial={{ opacity: 0, x: -50 }}
@@ -56,7 +67,7 @@ export default function Lookbook() {
               <img 
                 src={collection.image} 
                 alt={collection.name} 
-                className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-1000"
+                className="w-full h-full object-cover grayscale transition-all duration-1000"
               />
             </motion.div>
           </div>

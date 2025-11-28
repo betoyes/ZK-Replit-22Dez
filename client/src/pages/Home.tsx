@@ -149,9 +149,9 @@ export default function Home() {
       <section className="h-[60vh] flex items-center justify-center bg-black text-white px-4 text-center relative overflow-hidden">
          <motion.div 
           style={{ y: y2 }}
-          className="absolute inset-0 opacity-30"
+          className="absolute inset-0 opacity-20"
         >
-           <img src={heroImage} className="w-full h-full object-cover blur-xl scale-110" />
+           <img src={heroImage} className="w-full h-full object-cover blur-3xl scale-110 grayscale" />
         </motion.div>
         
         <div className="relative z-10 max-w-2xl space-y-8">
