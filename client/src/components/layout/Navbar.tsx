@@ -37,8 +37,10 @@ export function Navbar() {
       <motion.nav
         initial={{ y: -100 }}
         animate={{ y: 0 }}
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 mix-blend-difference text-white ${
-          isScrolled ? 'py-4' : 'py-8'
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 text-white ${
+          isScrolled 
+            ? 'py-4 bg-black/80 backdrop-blur-md border-b border-white/10' 
+            : 'py-8 bg-gradient-to-b from-black/80 via-black/40 to-transparent'
         }`}
       >
         <div className="container mx-auto px-6 md:px-12 flex items-center justify-between">
