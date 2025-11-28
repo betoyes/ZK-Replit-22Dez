@@ -21,16 +21,16 @@ export default function Product() {
   if (!product) {
     return (
       <div className="min-h-screen flex items-center justify-center flex-col gap-4 bg-background text-foreground">
-        <h1 className="font-display text-2xl">Artifact Not Found</h1>
-        <Link href="/shop"><Button variant="outline">Return to Archive</Button></Link>
+        <h1 className="font-display text-2xl">Artefato Não Encontrado</h1>
+        <Link href="/shop"><Button variant="outline">Voltar ao Arquivo</Button></Link>
       </div>
     );
   }
 
   const handleAddToCart = () => {
     toast({
-      title: "Added to Cart",
-      description: `${product.name} has been secured.`,
+      title: "Adicionado à Sacola",
+      description: `${product.name} foi reservado.`,
     });
   };
 
@@ -39,7 +39,7 @@ export default function Product() {
       <div className="container mx-auto px-6 md:px-12">
         <div className="mb-12">
            <Link href="/shop" className="group inline-flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors">
-              <ArrowLeft className="h-3 w-3 group-hover:-translate-x-1 transition-transform" /> Back to Archive
+              <ArrowLeft className="h-3 w-3 group-hover:-translate-x-1 transition-transform" /> Voltar ao Arquivo
            </Link>
         </div>
 
@@ -60,7 +60,7 @@ export default function Product() {
             <div className="border-t border-black pt-4 mb-8">
               <div className="flex justify-between items-start mb-4">
                 <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
-                  {product.collection} Collection
+                  Coleção {product.collection}
                 </span>
                 <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
                   Ref. {product.id.toString().padStart(4, '0')}
@@ -71,7 +71,7 @@ export default function Product() {
             </div>
 
             <p className="text-lg leading-relaxed mb-12 text-muted-foreground font-light">
-              {product.description} Crafted for the modern era, this piece exemplifies the balance between raw material and refined design.
+              {product.description} Criado para a era moderna, esta peça exemplifica o equilíbrio entre matéria-prima e design refinado.
             </p>
 
             <div className="space-y-6 mb-16">
@@ -80,12 +80,12 @@ export default function Product() {
                 className="w-full rounded-none h-16 bg-foreground text-background hover:bg-foreground/90 font-mono text-xs uppercase tracking-widest flex items-center justify-between px-8"
                 onClick={handleAddToCart}
               >
-                <span>Add to Bag</span>
+                <span>Adicionar</span>
                 <Plus className="h-4 w-4" />
               </Button>
               
               <div className="font-mono text-[10px] uppercase tracking-widest text-center text-muted-foreground">
-                Free Global Shipping • Lifetime Warranty
+                Envio Global Grátis • Garantia Vitalícia
               </div>
             </div>
 
@@ -93,20 +93,20 @@ export default function Product() {
             <div className="border-t border-border">
               <Accordion type="single" collapsible className="w-full">
                 <AccordionItem value="details" className="border-b border-border">
-                  <AccordionTrigger className="font-mono text-xs uppercase tracking-widest py-6 hover:no-underline">Technical Specifications</AccordionTrigger>
+                  <AccordionTrigger className="font-mono text-xs uppercase tracking-widest py-6 hover:no-underline">Especificações Técnicas</AccordionTrigger>
                   <AccordionContent className="text-muted-foreground font-light pb-6">
                     <ul className="space-y-2">
-                      <li>Material: 18K Solid Gold</li>
-                      <li>Gemstone: Certified Conflict-Free Diamond</li>
-                      <li>Weight: Approx. 5g</li>
-                      <li>Origin: Handcrafted in Italy</li>
+                      <li>Material: Ouro 18K Sólido</li>
+                      <li>Gema: Diamante Certificado Livre de Conflitos</li>
+                      <li>Peso: Aprox. 5g</li>
+                      <li>Origem: Feito à mão na Itália</li>
                     </ul>
                   </AccordionContent>
                 </AccordionItem>
                 <AccordionItem value="shipping" className="border-b border-border">
-                  <AccordionTrigger className="font-mono text-xs uppercase tracking-widest py-6 hover:no-underline">Shipping & Returns</AccordionTrigger>
+                  <AccordionTrigger className="font-mono text-xs uppercase tracking-widest py-6 hover:no-underline">Envio e Devoluções</AccordionTrigger>
                   <AccordionContent className="text-muted-foreground font-light pb-6">
-                    Complimentary express shipping worldwide. Returns accepted within 14 days of delivery in original condition.
+                    Envio expresso gratuito para todo o mundo. Aceitamos devoluções em até 14 dias após a entrega, na condição original.
                   </AccordionContent>
                 </AccordionItem>
               </Accordion>

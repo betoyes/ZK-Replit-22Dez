@@ -27,13 +27,13 @@ export default function Shop() {
       <div className="container mx-auto px-6 md:px-12 pb-24">
         <div className="flex flex-col md:flex-row justify-between items-end mb-20 border-b border-border pb-8">
           <div>
-             <h1 className="font-display text-6xl md:text-8xl font-bold tracking-tighter mb-4">Archive</h1>
+             <h1 className="font-display text-6xl md:text-8xl font-bold tracking-tighter mb-4">Arquivo</h1>
              <p className="font-mono text-sm text-muted-foreground uppercase tracking-widest max-w-md">
-               Curated selection of artifacts for the modern individual.
+               Seleção curada de artefatos para o indivíduo moderno.
              </p>
           </div>
           <div className="font-mono text-xs mb-2">
-            {filteredProducts.length} ITEMS
+            {filteredProducts.length} ITENS
           </div>
         </div>
 
@@ -42,13 +42,13 @@ export default function Shop() {
           <div className="w-full lg:w-48 space-y-12 sticky top-32 h-fit">
             {/* Categories */}
             <div>
-              <h3 className="font-mono text-xs uppercase tracking-widest mb-6 text-muted-foreground">Filter By</h3>
+              <h3 className="font-mono text-xs uppercase tracking-widest mb-6 text-muted-foreground">Filtrar Por</h3>
               <div className="space-y-4">
                 <button 
                   onClick={() => setSelectedCategory('all')}
                   className={`block font-display text-lg hover:text-muted-foreground transition-colors ${selectedCategory === 'all' ? 'text-foreground underline decoration-1 underline-offset-4' : 'text-muted-foreground'}`}
                 >
-                  All Items
+                  Todos
                 </button>
                 {categories.map(cat => (
                   <button 
@@ -64,7 +64,7 @@ export default function Shop() {
 
             {/* Price Filter - Minimal */}
             <div>
-              <h3 className="font-mono text-xs uppercase tracking-widest mb-6 text-muted-foreground">Price Range</h3>
+              <h3 className="font-mono text-xs uppercase tracking-widest mb-6 text-muted-foreground">Faixa de Preço</h3>
               <div className="space-y-6">
                 <Slider 
                   defaultValue={[0, 50000]} 
@@ -86,12 +86,12 @@ export default function Shop() {
           <div className="flex-1">
             {filteredProducts.length === 0 ? (
               <div className="py-20 text-center border-t border-b border-border">
-                <p className="font-display text-2xl mb-4">No artifacts found.</p>
+                <p className="font-display text-2xl mb-4">Nenhum artefato encontrado.</p>
                 <Button variant="link" onClick={() => {
                   setSelectedCategory('all');
                   setPriceRange([0, 50000]);
                 }} className="font-mono text-xs uppercase tracking-widest">
-                  Clear Filters
+                  Limpar Filtros
                 </Button>
               </div>
             ) : (
@@ -117,7 +117,7 @@ export default function Shop() {
                         {/* Hover Overlay Button */}
                         <div className="absolute bottom-0 left-0 w-full p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                            <div className="bg-white/10 backdrop-blur-md border border-white/20 text-white py-3 px-4 flex justify-between items-center">
-                             <span className="font-mono text-xs uppercase tracking-widest">View Details</span>
+                             <span className="font-mono text-xs uppercase tracking-widest">Ver Detalhes</span>
                              <ArrowRight className="h-3 w-3" />
                            </div>
                         </div>

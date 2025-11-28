@@ -14,27 +14,27 @@ export function Footer() {
             </div>
             <div className="mt-8 max-w-sm">
               <p className="font-mono text-xs text-muted-foreground uppercase leading-relaxed">
-                We craft objects of desire for the modern world. <br/>
-                Timeless design meets contemporary attitude.
+                Criamos objetos de desejo para o mundo moderno. <br/>
+                Design atemporal encontra atitude contemporânea.
               </p>
             </div>
           </div>
 
           {/* Links Grid */}
           <div className="md:col-span-2">
-            <h4 className="font-mono text-xs uppercase tracking-widest mb-8 text-muted-foreground">Shop</h4>
+            <h4 className="font-mono text-xs uppercase tracking-widest mb-8 text-muted-foreground">Loja</h4>
             <ul className="space-y-4">
-              <li><Link href="/shop?category=aneis" className="font-display text-xl hover:text-muted-foreground transition-colors">Rings</Link></li>
-              <li><Link href="/shop?category=colares" className="font-display text-xl hover:text-muted-foreground transition-colors">Necklaces</Link></li>
-              <li><Link href="/shop?category=brincos" className="font-display text-xl hover:text-muted-foreground transition-colors">Earrings</Link></li>
+              <li><Link href="/shop?category=aneis" className="font-display text-xl hover:text-muted-foreground transition-colors">Anéis</Link></li>
+              <li><Link href="/shop?category=colares" className="font-display text-xl hover:text-muted-foreground transition-colors">Colares</Link></li>
+              <li><Link href="/shop?category=brincos" className="font-display text-xl hover:text-muted-foreground transition-colors">Brincos</Link></li>
             </ul>
           </div>
 
           <div className="md:col-span-2">
-            <h4 className="font-mono text-xs uppercase tracking-widest mb-8 text-muted-foreground">Company</h4>
+            <h4 className="font-mono text-xs uppercase tracking-widest mb-8 text-muted-foreground">Empresa</h4>
             <ul className="space-y-4">
               <li><Link href="/about" className="font-display text-xl hover:text-muted-foreground transition-colors">Manifesto</Link></li>
-              <li><Link href="/contact" className="font-display text-xl hover:text-muted-foreground transition-colors">Contact</Link></li>
+              <li><Link href="/contact" className="font-display text-xl hover:text-muted-foreground transition-colors">Contato</Link></li>
               <li><Link href="/admin" className="font-display text-xl hover:text-muted-foreground transition-colors">Admin</Link></li>
             </ul>
           </div>
@@ -50,10 +50,10 @@ export function Footer() {
         </div>
 
         <div className="border-t border-border pt-8 flex flex-col md:flex-row justify-between items-center gap-4 font-mono text-[10px] text-muted-foreground uppercase tracking-widest">
-          <p>&copy; 2025 AURUM JEWELRY. ALL RIGHTS RESERVED.</p>
+          <p>&copy; 2025 AURUM JEWELRY. TODOS OS DIREITOS RESERVADOS.</p>
           <div className="flex gap-8">
-            <a href="#" className="hover:text-foreground">Privacy Policy</a>
-            <a href="#" className="hover:text-foreground">Terms of Use</a>
+            <a href="#" className="hover:text-foreground">Política de Privacidade</a>
+            <a href="#" className="hover:text-foreground">Termos de Uso</a>
           </div>
         </div>
       </div>

@@ -29,15 +29,15 @@ export default function Home() {
         
         <div className="absolute inset-0 flex flex-col justify-between p-6 md:p-12 z-10 mix-blend-difference text-white pointer-events-none">
           <div className="flex justify-between items-start">
-            <span className="font-mono text-xs tracking-[0.5em] uppercase">Collection 01</span>
+            <span className="font-mono text-xs tracking-[0.5em] uppercase">Coleção 01</span>
             <span className="font-mono text-xs tracking-[0.5em] uppercase text-right hidden md:block">
-              Sao Paulo<br/>Paris<br/>Tokyo
+              São Paulo<br/>Paris<br/>Tóquio
             </span>
           </div>
           
           <div className="space-y-4">
             <h1 className="font-display text-[12vw] leading-[0.8] font-bold tracking-tighter uppercase">
-              Future<br/><span className="ml-[10vw]">Heritage</span>
+              Herança<br/><span className="ml-[10vw]">Futura</span>
             </h1>
           </div>
 
@@ -46,12 +46,12 @@ export default function Home() {
               <div className="h-12 w-12 rounded-full border border-white/30 flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all">
                 <Play className="h-4 w-4 fill-current" />
               </div>
-              <span className="font-mono text-xs tracking-widest uppercase hidden md:block">Watch Film</span>
+              <span className="font-mono text-xs tracking-widest uppercase hidden md:block">Ver Campanha</span>
             </button>
             
             <Link href="/shop">
               <Button variant="outline" className="rounded-full px-8 py-6 bg-transparent text-white border-white hover:bg-white hover:text-black font-mono text-xs tracking-widest uppercase transition-all">
-                Shop The Drop
+                Ver Lançamento
               </Button>
             </Link>
           </div>
@@ -63,15 +63,15 @@ export default function Home() {
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
           <div className="md:col-span-4 flex flex-col justify-between">
             <div>
-              <h2 className="font-display text-4xl md:text-5xl font-medium mb-8 tracking-tight">
-                Redefining<br/>Luxury
+              <h2 className="font-display text-4xl md:text-5xl font-medium mb-8 tracking-tight leading-[1.1]">
+                Redefinindo<br/>o Luxo
               </h2>
               <p className="font-mono text-sm text-muted-foreground leading-relaxed max-w-xs mb-12">
-                We believe in jewelry that speaks the language of modern architecture. Clean lines, bold forms, and an unapologetic presence.
+                Acreditamos em joias que falam a linguagem da arquitetura moderna. Linhas limpas, formas ousadas e uma presença inegável.
               </p>
             </div>
             <Link href="/about" className="group flex items-center gap-2 font-mono text-xs uppercase tracking-widest hover:opacity-50 transition-opacity">
-              Read Manifesto <ArrowUpRight className="h-4 w-4 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+              Ler Manifesto <ArrowUpRight className="h-4 w-4 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
             </Link>
           </div>
           
@@ -84,8 +84,8 @@ export default function Home() {
               />
               <div className="absolute bottom-0 left-0 p-8 bg-white/10 backdrop-blur-md w-full">
                 <div className="flex justify-between items-center text-white">
-                  <span className="font-display text-2xl">Aurora Chain</span>
-                  <span className="font-mono text-sm">18K Gold</span>
+                  <span className="font-display text-2xl">Corrente Aurora</span>
+                  <span className="font-mono text-sm">Ouro 18K</span>
                 </div>
               </div>
             </div>
@@ -101,21 +101,21 @@ export default function Home() {
           className="flex gap-12 font-display text-8xl md:text-9xl font-bold tracking-tighter uppercase opacity-20"
         >
           <span>Aurum</span>
-          <span>Eternal</span>
-          <span>Modern</span>
-          <span>Luxury</span>
+          <span>Eterno</span>
+          <span>Moderno</span>
+          <span>Luxo</span>
           <span>Aurum</span>
-          <span>Eternal</span>
-          <span>Modern</span>
-          <span>Luxury</span>
+          <span>Eterno</span>
+          <span>Moderno</span>
+          <span>Luxo</span>
         </motion.div>
       </div>
 
       {/* Horizontal Scroll Product Section */}
       <section className="py-32 pl-4 md:pl-12 overflow-hidden">
         <div className="flex justify-between items-end pr-12 mb-16">
-          <h2 className="font-display text-4xl font-medium">Latest Drops</h2>
-          <Link href="/shop" className="font-mono text-xs uppercase tracking-widest hover:underline underline-offset-4">View All</Link>
+          <h2 className="font-display text-4xl font-medium">Últimos Drops</h2>
+          <Link href="/shop" className="font-mono text-xs uppercase tracking-widest hover:underline underline-offset-4">Ver Tudo</Link>
         </div>
 
         <div className="flex gap-8 overflow-x-auto pb-12 pr-12 scrollbar-hide">
@@ -153,19 +153,19 @@ export default function Home() {
         </motion.div>
         
         <div className="relative z-10 max-w-2xl space-y-8">
-          <h2 className="font-display text-5xl md:text-7xl font-bold tracking-tighter">
-            Join the <br/> Inner Circle
+          <h2 className="font-display text-5xl md:text-7xl font-bold tracking-tighter leading-[0.9]">
+            Entre para o <br/> Círculo Interno
           </h2>
           <p className="font-mono text-sm text-white/60 max-w-md mx-auto">
-            Receive early access to limited drops and exclusive events.
+            Receba acesso antecipado a lançamentos limitados e eventos exclusivos.
           </p>
           <div className="flex gap-0 border-b border-white/30 max-w-md mx-auto">
             <input 
               type="email" 
-              placeholder="ENTER EMAIL" 
+              placeholder="SEU EMAIL" 
               className="bg-transparent w-full py-4 focus:outline-none font-mono text-sm placeholder:text-white/30"
             />
-            <button className="font-mono text-xs uppercase tracking-widest hover:text-white/70">Subscribe</button>
+            <button className="font-mono text-xs uppercase tracking-widest hover:text-white/70">Inscrever</button>
           </div>
         </div>
       </section>

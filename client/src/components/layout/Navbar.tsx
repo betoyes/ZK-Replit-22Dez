@@ -38,11 +38,14 @@ export function Navbar() {
 
         {/* Desktop Links - Center / Hidden on Mobile */}
         <div className="hidden md:flex items-center gap-12 absolute left-1/2 -translate-x-1/2">
-          {['Shop', 'Collections', 'About'].map((item) => (
-            <Link key={item} href={`/${item.toLowerCase()}`} className="text-sm font-mono tracking-widest hover:underline underline-offset-4 uppercase">
-              {item}
-            </Link>
-          ))}
+          {['Loja', 'Coleções', 'Sobre'].map((item) => {
+            const href = item === 'Loja' ? '/shop' : item === 'Coleções' ? '/collections' : '/about';
+            return (
+              <Link key={item} href={href} className="text-sm font-mono tracking-widest hover:underline underline-offset-4 uppercase">
+                {item}
+              </Link>
+            );
+          })}
         </div>
 
         {/* Right Actions */}
@@ -54,7 +57,7 @@ export function Navbar() {
           <div className="flex items-center gap-4">
             <Link href="/cart">
               <button className="hover:opacity-70 transition-opacity font-mono text-sm flex items-center gap-2">
-                BAG (0)
+                SACOLA (0)
               </button>
             </Link>
             
@@ -69,9 +72,15 @@ export function Navbar() {
                 <SheetContent side="right" className="bg-black text-white border-l-white/10 w-full sm:w-[400px] p-0">
                   <div className="flex flex-col h-full p-8 justify-between">
                     <div className="space-y-8 mt-20">
-                      {['Home', 'Shop', 'Collections', 'About', 'Contact'].map((item) => (
-                        <Link key={item} href={item === 'Home' ? '/' : `/${item.toLowerCase()}`} className="block font-display text-5xl md:text-6xl font-medium hover:text-white/50 transition-colors tracking-tighter">
-                          {item}
+                      {[
+                        { name: 'Início', href: '/' },
+                        { name: 'Loja', href: '/shop' },
+                        { name: 'Coleções', href: '/collections' },
+                        { name: 'Sobre', href: '/about' },
+                        { name: 'Contato', href: '/contact' }
+                      ].map((item) => (
+                        <Link key={item.name} href={item.href} className="block font-display text-5xl md:text-6xl font-medium hover:text-white/50 transition-colors tracking-tighter">
+                          {item.name}
                         </Link>
                       ))}
                     </div>
