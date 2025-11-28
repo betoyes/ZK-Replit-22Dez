@@ -1,21 +1,28 @@
 import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { X, Minus, Plus, ArrowRight } from 'lucide-react';
-import { products } from '@/lib/mockData';
-import { useState } from 'react';
+import { useProducts } from '@/context/ProductContext';
+import { useState, useEffect } from 'react';
 
 // Mock cart data initialized with a few items
 const initialCartItems = [
-  { product: products[0], quantity: 1 },
-  { product: products[2], quantity: 1 },
+  { productId: 1, quantity: 1 },
+  { productId: 3, quantity: 1 },
 ];
 
 export default function Cart() {
+  const { products } = useProducts();
   const [cartItems, setCartItems] = useState(initialCartItems);
+
+  // Enrich cart items with product data from context
+  const enrichedCartItems = cartItems.map(item => {
+    const product = products.find(p => p.id === item.productId);
+    return product ? { ...item, product } : null;
+  }).filter(item => item !== null) as { productId: number, quantity: number, product: any }[];
 
   const updateQuantity = (productId: number, delta: number) => {
     setCartItems(items => items.map(item => {
-      if (item.product.id === productId) {
+      if (item.productId === productId) {
         const newQuantity = Math.max(1, item.quantity + delta);
         return { ...item, quantity: newQuantity };
       }
@@ -24,17 +31,17 @@ export default function Cart() {
   };
 
   const removeItem = (productId: number) => {
-    setCartItems(items => items.filter(item => item.product.id !== productId));
+    setCartItems(items => items.filter(item => item.productId !== productId));
   };
 
-  const subtotal = cartItems.reduce((acc, item) => acc + (item.product.price * item.quantity), 0);
+  const subtotal = enrichedCartItems.reduce((acc, item) => acc + (item.product.price * item.quantity), 0);
 
   return (
     <div className="min-h-screen bg-background pt-32 pb-24">
       <div className="container mx-auto px-4">
         <h1 className="font-serif text-4xl mb-12 text-center">Sua Sacola</h1>
 
-        {cartItems.length === 0 ? (
+        {enrichedCartItems.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-muted-foreground mb-6">Sua sacola está vazia.</p>
             <Link href="/shop">
@@ -53,7 +60,7 @@ export default function Cart() {
               </div>
 
               <div className="space-y-8">
-                {cartItems.map(({ product, quantity }) => (
+                {enrichedCartItems.map(({ product, quantity }) => (
                   <div key={product.id} className="flex flex-col md:flex-row items-center gap-6 border-b border-border pb-8 md:pb-4 md:border-none">
                     <div className="w-full md:flex-1 flex items-center gap-6">
                       <div className="h-24 w-24 bg-secondary/20 overflow-hidden shrink-0">
@@ -91,11 +98,11 @@ export default function Cart() {
               <h3 className="font-serif text-xl mb-6">Resumo do Pedido</h3>
               <div className="space-y-4 text-sm mb-8">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Subtotal</span>
+                  <span>Subtotal</span>
                   <span>R$ {subtotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Frete</span>
+                  <span>Frete</span>
                   <span>Grátis</span>
                 </div>
                 <div className="border-t border-border pt-4 flex justify-between font-medium text-lg">

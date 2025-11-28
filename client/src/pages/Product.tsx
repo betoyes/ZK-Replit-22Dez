@@ -1,5 +1,5 @@
 import { useRoute, Link } from 'wouter';
-import { products } from '@/lib/mockData';
+import { useProducts } from '@/context/ProductContext';
 import { Button } from '@/components/ui/button';
 import { 
   Accordion,
@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 
 export default function Product() {
   const [match, params] = useRoute('/product/:id');
+  const { products } = useProducts();
   const { toast } = useToast();
   
   if (!match) return null;

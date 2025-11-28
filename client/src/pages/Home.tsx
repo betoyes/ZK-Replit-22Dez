@@ -2,11 +2,13 @@ import { Link } from 'wouter';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { ArrowDown, ArrowUpRight, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { products, collections } from '@/lib/mockData';
+import { collections } from '@/lib/mockData';
+import { useProducts } from '@/context/ProductContext';
 import heroImage from '@assets/generated_images/luxury_jewelry_hero_image_with_model.png';
 import necklaceImage from '@assets/generated_images/gold_necklace_product_shot.png';
 
 export default function Home() {
+  const { products } = useProducts();
   const { scrollY } = useScroll();
   const y1 = useTransform(scrollY, [0, 500], [0, 200]);
   const y2 = useTransform(scrollY, [0, 500], [0, -100]);
