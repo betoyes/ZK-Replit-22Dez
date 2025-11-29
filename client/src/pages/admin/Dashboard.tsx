@@ -53,11 +53,34 @@ export default function Dashboard() {
     description: '',
     category: '',
     collection: '',
-    image: ''
+    image: '',
+    imageColor: ''
   });
 
   const [catFormData, setCatFormData] = useState({ name: '', description: '' });
   const [colFormData, setColFormData] = useState({ name: '', description: '' });
+  const [selectedProductIds, setSelectedProductIds] = useState<number[]>([]);
+  
+  // Helper for file upload
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, field: 'image' | 'imageColor') => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData(prev => ({ ...prev, [field]: reader.result as string }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+  
+  // Helper for collection/category product selection
+  const toggleProductSelection = (productId: number) => {
+    setSelectedProductIds(prev => 
+      prev.includes(productId) 
+        ? prev.filter(id => id !== productId)
+        : [...prev, productId]
+    );
+  };
   const [postFormData, setPostFormData] = useState({ title: '', excerpt: '', content: '', category: '', image: '' });
   const [brandingForm, setBrandingForm] = useState(branding);
 
@@ -92,7 +115,8 @@ export default function Dashboard() {
       description: formData.description,
       category: formData.category,
       collection: formData.collection || 'eternal',
-      image: getMockImage(formData.category), // Mock image assignment
+      image: formData.image || getMockImage(formData.category),
+      imageColor: formData.imageColor || formData.image || getMockImage(formData.category),
       isNew: true
     });
 
@@ -110,6 +134,8 @@ export default function Dashboard() {
       description: formData.description,
       category: formData.category,
       collection: formData.collection,
+      image: formData.image,
+      imageColor: formData.imageColor
     });
 
     setIsEditOpen(false);
@@ -133,7 +159,8 @@ export default function Dashboard() {
       description: product.description,
       category: product.category,
       collection: product.collection,
-      image: product.image
+      image: product.image,
+      imageColor: product.imageColor || product.image
     });
     setIsEditOpen(true);
   };
@@ -145,17 +172,28 @@ export default function Dashboard() {
       description: '',
       category: '',
       collection: '',
-      image: ''
+      image: '',
+      imageColor: ''
     });
   };
 
   // Category Handlers
   const handleAddCategory = () => {
     if (!catFormData.name) return;
+    
+    // Create category
     addCategory({ name: catFormData.name, description: catFormData.description });
+    
+    // Update selected products to this category
+    const newCategoryId = catFormData.name.toLowerCase().replace(/\s+/g, '-');
+    selectedProductIds.forEach(pid => {
+        updateProduct(pid, { category: newCategoryId });
+    });
+
     setIsAddCatOpen(false);
     setCatFormData({ name: '', description: '' });
-    toast({ title: "Sucesso", description: "Categoria adicionada" });
+    setSelectedProductIds([]);
+    toast({ title: "Sucesso", description: "Categoria adicionada e produtos vinculados" });
   };
 
   const handleDeleteCategory = (id: string) => {
@@ -168,10 +206,19 @@ export default function Dashboard() {
   // Collection Handlers
   const handleAddCollection = () => {
     if (!colFormData.name) return;
+    
     addCollection({ name: colFormData.name, description: colFormData.description, image: '' });
+    
+    // Update selected products to this collection
+    const newCollectionId = colFormData.name.toLowerCase().replace(/\s+/g, '-');
+    selectedProductIds.forEach(pid => {
+        updateProduct(pid, { collection: newCollectionId });
+    });
+
     setIsAddColOpen(false);
     setColFormData({ name: '', description: '' });
-    toast({ title: "Sucesso", description: "Coleção adicionada" });
+    setSelectedProductIds([]);
+    toast({ title: "Sucesso", description: "Coleção adicionada e produtos vinculados" });
   };
 
   const handleDeleteCollection = (id: string) => {
@@ -402,8 +449,28 @@ export default function Dashboard() {
                       </Select>
                     </div>
                     <div className="grid gap-2">
-                      <Label htmlFor="desc">Descrição</Label>
-                      <Input id="desc" value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} className="rounded-none" />
+                      <Label>Imagem (P&B / Principal)</Label>
+                      <div className="flex gap-4 items-center">
+                        <Input 
+                            type="file" 
+                            accept="image/*"
+                            onChange={(e) => handleImageUpload(e, 'image')}
+                            className="rounded-none font-mono text-xs" 
+                        />
+                        {formData.image && <div className="h-10 w-10 bg-secondary"><img src={formData.image} className="h-full w-full object-cover" /></div>}
+                      </div>
+                    </div>
+                    <div className="grid gap-2">
+                      <Label>Imagem (Colorida / Hover)</Label>
+                      <div className="flex gap-4 items-center">
+                        <Input 
+                            type="file" 
+                            accept="image/*"
+                            onChange={(e) => handleImageUpload(e, 'imageColor')}
+                            className="rounded-none font-mono text-xs" 
+                        />
+                        {formData.imageColor && <div className="h-10 w-10 bg-secondary"><img src={formData.imageColor} className="h-full w-full object-cover" /></div>}
+                      </div>
                     </div>
                   </div>
                   <DialogFooter>
@@ -496,6 +563,30 @@ export default function Dashboard() {
                     <Label htmlFor="edit-desc">Descrição</Label>
                     <Input id="edit-desc" value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} className="rounded-none" />
                   </div>
+                  <div className="grid gap-2">
+                      <Label>Imagem (P&B / Principal)</Label>
+                      <div className="flex gap-4 items-center">
+                        <Input 
+                            type="file" 
+                            accept="image/*"
+                            onChange={(e) => handleImageUpload(e, 'image')}
+                            className="rounded-none font-mono text-xs" 
+                        />
+                        {formData.image && <div className="h-10 w-10 bg-secondary"><img src={formData.image} className="h-full w-full object-cover" /></div>}
+                      </div>
+                    </div>
+                    <div className="grid gap-2">
+                      <Label>Imagem (Colorida / Hover)</Label>
+                      <div className="flex gap-4 items-center">
+                        <Input 
+                            type="file" 
+                            accept="image/*"
+                            onChange={(e) => handleImageUpload(e, 'imageColor')}
+                            className="rounded-none font-mono text-xs" 
+                        />
+                        {formData.imageColor && <div className="h-10 w-10 bg-secondary"><img src={formData.imageColor} className="h-full w-full object-cover" /></div>}
+                      </div>
+                    </div>
                 </div>
                 <DialogFooter>
                   <Button onClick={handleEdit} className="rounded-none w-full bg-black text-white hover:bg-primary uppercase tracking-widest font-mono text-xs">Atualizar</Button>
@@ -526,6 +617,27 @@ export default function Dashboard() {
                       <Label>Descrição</Label>
                       <Input value={catFormData.description} onChange={(e) => setCatFormData({...catFormData, description: e.target.value})} className="rounded-none" />
                     </div>
+                    
+                    <div className="grid gap-2 mt-4">
+                    <Label>Selecionar Produtos</Label>
+                    <div className="border border-border p-4 h-48 overflow-y-auto space-y-2">
+                        {products.map(p => (
+                            <div key={p.id} className="flex items-center gap-2">
+                                <input 
+                                    type="checkbox" 
+                                    id={`cat-prod-${p.id}`}
+                                    checked={selectedProductIds.includes(p.id)}
+                                    onChange={() => toggleProductSelection(p.id)}
+                                    className="accent-black"
+                                />
+                                <label htmlFor={`cat-prod-${p.id}`} className="text-sm font-mono cursor-pointer truncate">
+                                    {p.name}
+                                </label>
+                            </div>
+                        ))}
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">Os produtos selecionados serão movidos para esta categoria.</p>
+                  </div>
                   </div>
                   <DialogFooter>
                     <Button onClick={handleAddCategory} className="rounded-none w-full bg-black text-white hover:bg-primary uppercase tracking-widest font-mono text-xs">Salvar</Button>
@@ -573,6 +685,27 @@ export default function Dashboard() {
                       <Label>Descrição</Label>
                       <Input value={colFormData.description} onChange={(e) => setColFormData({...colFormData, description: e.target.value})} className="rounded-none" />
                     </div>
+                    
+                    <div className="grid gap-2 mt-4">
+                    <Label>Selecionar Produtos</Label>
+                    <div className="border border-border p-4 h-48 overflow-y-auto space-y-2">
+                        {products.map(p => (
+                            <div key={p.id} className="flex items-center gap-2">
+                                <input 
+                                    type="checkbox" 
+                                    id={`col-prod-${p.id}`}
+                                    checked={selectedProductIds.includes(p.id)}
+                                    onChange={() => toggleProductSelection(p.id)}
+                                    className="accent-black"
+                                />
+                                <label htmlFor={`col-prod-${p.id}`} className="text-sm font-mono cursor-pointer truncate">
+                                    {p.name}
+                                </label>
+                            </div>
+                        ))}
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">Os produtos selecionados serão movidos para esta coleção.</p>
+                  </div>
                   </div>
                   <DialogFooter>
                     <Button onClick={handleAddCollection} className="rounded-none w-full bg-black text-white hover:bg-primary uppercase tracking-widest font-mono text-xs">Salvar</Button>
