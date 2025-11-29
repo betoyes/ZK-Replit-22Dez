@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { useRoute, Link } from 'wouter';
 import { useProducts } from '@/context/ProductContext';
 import { Button } from '@/components/ui/button';
@@ -14,10 +15,17 @@ export default function Product() {
   const [match, params] = useRoute('/product/:id');
   const { products } = useProducts();
   const { toast } = useToast();
+  const [mainImage, setMainImage] = useState('');
   
   if (!match) return null;
 
   const product = products.find(p => p.id === parseInt(params.id));
+
+  useEffect(() => {
+    if (product) {
+      setMainImage(product.imageColor || product.image);
+    }
+  }, [product]);
 
   if (!product) {
     return (
@@ -40,6 +48,12 @@ export default function Product() {
     .filter(p => p.category === product.category && p.id !== product.id)
     .slice(0, 3);
 
+  // All images for carousel (Main + Gallery)
+  const allImages = [
+    product.imageColor || product.image,
+    ...(product.gallery || [])
+  ].filter(Boolean);
+
   return (
     <div className="min-h-screen bg-background pt-32 pb-24">
       <div className="container mx-auto px-6 md:px-12">
@@ -52,25 +66,32 @@ export default function Product() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-24 mb-32">
           {/* Product Image - Sticky on Desktop */}
           <div className="lg:col-span-7 relative">
-             <div className="sticky top-32 space-y-8">
+             <div className="sticky top-32 space-y-6">
                <div className="aspect-[3/4] bg-secondary overflow-hidden">
                  <img 
-                  src={product.imageColor || product.image} 
+                  src={mainImage || product.imageColor || product.image} 
                   alt={product.name} 
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover transition-opacity duration-300"
                 />
                </div>
                
-               {product.gallery && product.gallery.length > 0 && (
-                 <div className="grid grid-cols-2 gap-4">
-                   {product.gallery.map((img, idx) => (
-                     <div key={idx} className="aspect-[3/4] bg-secondary overflow-hidden">
+               {/* Small Carousel / Thumbnails */}
+               {allImages.length > 1 && (
+                 <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide snap-x">
+                   {allImages.map((img, idx) => (
+                     <button 
+                        key={idx} 
+                        onClick={() => setMainImage(img)}
+                        className={`shrink-0 w-24 aspect-[3/4] bg-secondary overflow-hidden border transition-all snap-start ${
+                          mainImage === img ? 'border-black ring-1 ring-black opacity-100' : 'border-transparent hover:border-gray-300 opacity-70 hover:opacity-100'
+                        }`}
+                     >
                        <img 
                         src={img} 
-                        alt={`${product.name} ${idx + 1}`} 
-                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                        alt={`${product.name} thumbnail ${idx + 1}`} 
+                        className="w-full h-full object-cover"
                       />
-                     </div>
+                     </button>
                    ))}
                  </div>
                )}
