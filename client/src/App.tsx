@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { PageTransition } from "@/components/layout/PageTransition";
+import { CookieConsent } from "@/components/CookieConsent";
 import { ProductProvider } from "@/context/ProductContext";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
@@ -67,6 +68,7 @@ function App() {
               <Router />
             </main>
             <Footer />
+            <CookieConsent />
           </div>
         </ProductProvider>
       </TooltipProvider>
