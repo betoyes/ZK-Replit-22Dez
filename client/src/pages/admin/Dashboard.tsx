@@ -61,7 +61,7 @@ export default function Dashboard() {
   });
 
   const [catFormData, setCatFormData] = useState({ name: '', description: '' });
-  const [colFormData, setColFormData] = useState({ name: '', description: '' });
+  const [colFormData, setColFormData] = useState({ name: '', description: '', image: '' });
   const [selectedProductIds, setSelectedProductIds] = useState<number[]>([]);
   
   // Helper for file upload
@@ -86,6 +86,17 @@ export default function Dashboard() {
         };
         reader.readAsDataURL(file);
       });
+    }
+  };
+
+  const handleCollectionImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setColFormData(prev => ({ ...prev, image: reader.result as string }));
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -242,7 +253,7 @@ export default function Dashboard() {
   const handleAddCollection = () => {
     if (!colFormData.name) return;
     
-    addCollection({ name: colFormData.name, description: colFormData.description, image: '' });
+    addCollection({ name: colFormData.name, description: colFormData.description, image: colFormData.image });
     
     // Update selected products to this collection
     const newCollectionId = colFormData.name.toLowerCase().replace(/\s+/g, '-');
@@ -251,7 +262,7 @@ export default function Dashboard() {
     });
 
     setIsAddColOpen(false);
-    setColFormData({ name: '', description: '' });
+    setColFormData({ name: '', description: '', image: '' });
     setSelectedProductIds([]);
     toast({ title: "Sucesso", description: "Coleção adicionada e produtos vinculados" });
   };
@@ -767,6 +778,19 @@ export default function Dashboard() {
                     <div className="grid gap-2">
                       <Label>Descrição</Label>
                       <Input value={colFormData.description} onChange={(e) => setColFormData({...colFormData, description: e.target.value})} className="rounded-none" />
+                    </div>
+
+                    <div className="grid gap-2">
+                      <Label>Imagem da Coleção</Label>
+                      <div className="flex gap-4 items-center">
+                        <Input 
+                            type="file" 
+                            accept="image/*"
+                            onChange={handleCollectionImageUpload}
+                            className="rounded-none font-mono text-xs" 
+                        />
+                        {colFormData.image && <div className="h-10 w-10 bg-secondary"><img src={colFormData.image} className="h-full w-full object-cover" /></div>}
+                      </div>
                     </div>
                     
                     <div className="grid gap-2 mt-4">
