@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Link } from 'wouter';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { ArrowDown, ArrowUpRight, Play, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -10,6 +10,7 @@ import heroImage from '@assets/generated_images/luxury_jewelry_hero_image_with_m
 import necklaceImage from '@assets/generated_images/gold_necklace_product_shot.png';
 import campaignVideo from '@assets/generated_videos/b&w_jewelry_fashion_b-roll.mp4';
 import useEmblaCarousel from 'embla-carousel-react';
+import Autoplay from 'embla-carousel-autoplay';
 import { useToast } from '@/hooks/use-toast';
 
 import { testimonials } from '@/lib/mockData';
@@ -33,12 +34,21 @@ export default function Home() {
     toast({ title: "Bem-vindo(a)", description: "Você foi adicionado(a) à nossa lista exclusiva." });
   };
   
-  // Carousel setup
+  // Autoplay plugin configuration
+  const autoplayPlugin = Autoplay({
+    delay: 3000,
+    stopOnInteraction: false,
+    stopOnMouseEnter: true,
+    playOnInit: true,
+  });
+
+  // Carousel setup with autoplay
   const [emblaRef, emblaApi] = useEmblaCarousel({ 
     align: 'start',
-    containScroll: 'trimSnaps',
-    dragFree: true
-  });
+    containScroll: false,
+    dragFree: true,
+    loop: true,
+  }, [autoplayPlugin]);
 
   const scrollPrev = useCallback(() => {
     if (emblaApi) emblaApi.scrollPrev();
