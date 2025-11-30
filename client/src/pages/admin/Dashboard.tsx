@@ -1,9 +1,10 @@
-import { useState } from 'react';
-import { Link } from 'wouter';
+import { useState, useEffect } from 'react';
+import { Link, useLocation } from 'wouter';
 import { useProducts } from '@/context/ProductContext';
+import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { BookOpen, Package, DollarSign, Users, TrendingUp, Edit, Trash, Plus, Search, LayoutGrid, Tags, ShoppingCart, Download } from 'lucide-react';
+import { BookOpen, Package, DollarSign, Users, TrendingUp, Edit, Trash, Plus, Search, LayoutGrid, Tags, ShoppingCart, Download, Shield, UserPlus, LogOut } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
@@ -23,6 +24,15 @@ const getMockImage = (category: string) => {
   return earringsImage;
 };
 
+const PRIMARY_ADMIN_EMAIL = "betoyes@gmail.com";
+
+interface AdminUser {
+  id: number;
+  username: string;
+  role: string;
+  createdAt?: string;
+}
+
 export default function Dashboard() {
   const { 
     products, categories, collections, orders, customers,
@@ -34,8 +44,103 @@ export default function Dashboard() {
     subscribers
   } = useProducts();
   const { toast } = useToast();
+  const { user, logout } = useAuth();
+  const [, setLocation] = useLocation();
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState("overview");
+  
+  const [adminUsers, setAdminUsers] = useState<AdminUser[]>([]);
+  const [isAddAdminOpen, setIsAddAdminOpen] = useState(false);
+  const [adminFormData, setAdminFormData] = useState({ email: '', password: '', confirmPassword: '' });
+  const [isLoadingAdmins, setIsLoadingAdmins] = useState(false);
+  
+  const isPrimaryAdmin = user?.username === PRIMARY_ADMIN_EMAIL;
+  
+  useEffect(() => {
+    if (isPrimaryAdmin && activeTab === 'admins') {
+      fetchAdmins();
+    }
+  }, [isPrimaryAdmin, activeTab]);
+  
+  const fetchAdmins = async () => {
+    setIsLoadingAdmins(true);
+    try {
+      const response = await fetch('/api/admin/users');
+      if (response.ok) {
+        const data = await response.json();
+        setAdminUsers(data);
+      }
+    } catch (err) {
+      console.error('Error fetching admins:', err);
+    } finally {
+      setIsLoadingAdmins(false);
+    }
+  };
+  
+  const handleAddAdmin = async () => {
+    if (!adminFormData.email || !adminFormData.password) {
+      toast({ title: "Erro", description: "Preencha todos os campos", variant: "destructive" });
+      return;
+    }
+    if (adminFormData.password !== adminFormData.confirmPassword) {
+      toast({ title: "Erro", description: "As senhas não conferem", variant: "destructive" });
+      return;
+    }
+    if (adminFormData.password.length < 6) {
+      toast({ title: "Erro", description: "A senha deve ter pelo menos 6 caracteres", variant: "destructive" });
+      return;
+    }
+    
+    try {
+      const response = await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: adminFormData.email, password: adminFormData.password })
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message);
+      }
+      
+      toast({ title: "Sucesso", description: "Administrador adicionado com sucesso" });
+      setAdminFormData({ email: '', password: '', confirmPassword: '' });
+      setIsAddAdminOpen(false);
+      fetchAdmins();
+    } catch (err: any) {
+      toast({ title: "Erro", description: err.message || "Não foi possível adicionar administrador", variant: "destructive" });
+    }
+  };
+  
+  const handleDeleteAdmin = async (id: number, email: string) => {
+    if (email === PRIMARY_ADMIN_EMAIL) {
+      toast({ title: "Erro", description: "Não é possível remover o administrador principal", variant: "destructive" });
+      return;
+    }
+    if (!confirm(`Tem certeza que deseja remover o administrador ${email}?`)) return;
+    
+    try {
+      const response = await fetch(`/api/admin/users/${id}`, { method: 'DELETE' });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message);
+      }
+      toast({ title: "Sucesso", description: "Administrador removido" });
+      fetchAdmins();
+    } catch (err: any) {
+      toast({ title: "Erro", description: err.message || "Não foi possível remover administrador", variant: "destructive" });
+    }
+  };
+  
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast({ title: "Até logo!", description: "Você foi desconectado." });
+      setLocation('/admin/login');
+    } catch {
+      toast({ title: "Erro", description: "Não foi possível desconectar", variant: "destructive" });
+    }
+  };
   
   // Form States
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -372,6 +477,9 @@ export default function Dashboard() {
             <TabsTrigger value="customers" className="rounded-none border-b-2 border-transparent data-[state=active]:border-black data-[state=active]:shadow-none px-0 py-4 font-mono text-xs uppercase tracking-widest">Clientes</TabsTrigger>
             <TabsTrigger value="newsletter" className="rounded-none border-b-2 border-transparent data-[state=active]:border-black data-[state=active]:shadow-none px-0 py-4 font-mono text-xs uppercase tracking-widest">Newsletter</TabsTrigger>
             <TabsTrigger value="branding" className="rounded-none border-b-2 border-transparent data-[state=active]:border-black data-[state=active]:shadow-none px-0 py-4 font-mono text-xs uppercase tracking-widest">Branding</TabsTrigger>
+            {isPrimaryAdmin && (
+              <TabsTrigger value="admins" className="rounded-none border-b-2 border-transparent data-[state=active]:border-black data-[state=active]:shadow-none px-0 py-4 font-mono text-xs uppercase tracking-widest">Administradores</TabsTrigger>
+            )}
           </TabsList>
 
           {/* OVERVIEW TAB */}
@@ -1184,6 +1292,137 @@ export default function Dashboard() {
               </div>
             </div>
           </TabsContent>
+
+          {/* ADMINS TAB - Only visible to primary admin */}
+          {isPrimaryAdmin && (
+            <TabsContent value="admins" className="space-y-6">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h2 className="font-display text-2xl">Gerenciar Administradores</h2>
+                  <p className="font-mono text-xs text-muted-foreground mt-1">
+                    Adicione ou remova administradores do sistema.
+                  </p>
+                </div>
+                <Dialog open={isAddAdminOpen} onOpenChange={setIsAddAdminOpen}>
+                  <DialogTrigger asChild>
+                    <Button className="rounded-none bg-black text-white hover:bg-primary uppercase tracking-widest font-mono text-xs px-6 h-10 flex gap-2">
+                      <UserPlus className="h-4 w-4" /> Novo Admin
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[425px] bg-background border border-border">
+                    <DialogHeader>
+                      <DialogTitle className="font-display text-2xl">Adicionar Administrador</DialogTitle>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                      <div className="grid gap-2">
+                        <Label>Email</Label>
+                        <Input 
+                          type="email"
+                          value={adminFormData.email} 
+                          onChange={(e) => setAdminFormData({...adminFormData, email: e.target.value})} 
+                          className="rounded-none"
+                          placeholder="novo.admin@email.com"
+                          data-testid="input-admin-email"
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label>Senha</Label>
+                        <Input 
+                          type="password"
+                          value={adminFormData.password} 
+                          onChange={(e) => setAdminFormData({...adminFormData, password: e.target.value})} 
+                          className="rounded-none"
+                          placeholder="Mínimo 6 caracteres"
+                          data-testid="input-admin-password"
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label>Confirmar Senha</Label>
+                        <Input 
+                          type="password"
+                          value={adminFormData.confirmPassword} 
+                          onChange={(e) => setAdminFormData({...adminFormData, confirmPassword: e.target.value})} 
+                          className="rounded-none"
+                          placeholder="Repita a senha"
+                          data-testid="input-admin-confirm-password"
+                        />
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button 
+                        onClick={handleAddAdmin} 
+                        className="rounded-none w-full bg-black text-white hover:bg-primary uppercase tracking-widest font-mono text-xs"
+                        data-testid="button-add-admin"
+                      >
+                        Adicionar Administrador
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </div>
+
+              <div className="border border-border bg-card">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="hover:bg-transparent border-b border-border">
+                      <TableHead className="font-mono text-xs uppercase tracking-widest text-muted-foreground h-12">Email</TableHead>
+                      <TableHead className="font-mono text-xs uppercase tracking-widest text-muted-foreground h-12">Status</TableHead>
+                      <TableHead className="font-mono text-xs uppercase tracking-widest text-muted-foreground h-12">Adicionado em</TableHead>
+                      <TableHead className="font-mono text-xs uppercase tracking-widest text-muted-foreground h-12 text-right">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {isLoadingAdmins ? (
+                      <TableRow>
+                        <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                          Carregando...
+                        </TableCell>
+                      </TableRow>
+                    ) : adminUsers.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                          Nenhum administrador encontrado.
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      adminUsers.map((admin) => (
+                        <TableRow key={admin.id} className="hover:bg-secondary/30 border-b border-border transition-colors">
+                          <TableCell className="py-4 font-mono text-sm">
+                            <div className="flex items-center gap-2">
+                              <Shield className="h-4 w-4 text-muted-foreground" />
+                              {admin.username}
+                              {admin.username === PRIMARY_ADMIN_EMAIL && (
+                                <span className="bg-black text-white px-2 py-0.5 text-[10px] font-mono uppercase">Principal</span>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell className="font-mono text-xs uppercase tracking-widest text-green-600">
+                            Ativo
+                          </TableCell>
+                          <TableCell className="font-mono text-xs text-muted-foreground">
+                            {admin.createdAt ? new Date(admin.createdAt).toLocaleDateString('pt-BR') : '—'}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {admin.username !== PRIMARY_ADMIN_EMAIL && (
+                              <Button 
+                                onClick={() => handleDeleteAdmin(admin.id, admin.username)} 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-8 w-8 hover:text-destructive hover:bg-transparent"
+                                data-testid={`button-delete-admin-${admin.id}`}
+                              >
+                                <Trash className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </TabsContent>
+          )}
         </Tabs>
       </div>
     </div>

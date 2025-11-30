@@ -10,9 +10,18 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
 import { ArrowRight } from 'lucide-react';
 
-const formSchema = z.object({
+const loginSchema = z.object({
   email: z.string().email("Email inválido"),
   password: z.string().min(5, "A senha deve ter no mínimo 5 caracteres"),
+});
+
+const registerSchema = z.object({
+  email: z.string().email("Email inválido"),
+  password: z.string().min(6, "A senha deve ter no mínimo 6 caracteres"),
+  confirmPassword: z.string().min(1, "Confirme sua senha"),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "As senhas não conferem",
+  path: ["confirmPassword"],
 });
 
 export default function Login() {
@@ -22,11 +31,12 @@ export default function Login() {
   const { toast } = useToast();
   const { login, isAuthenticated, isAdmin } = useAuth();
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<z.infer<typeof registerSchema>>({
+    resolver: zodResolver(isLogin ? loginSchema : registerSchema),
     defaultValues: {
       email: "",
       password: "",
+      confirmPassword: "",
     },
   });
 
@@ -35,7 +45,7 @@ export default function Login() {
     return null;
   }
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: z.infer<typeof registerSchema>) {
     setIsLoading(true);
     try {
       if (isLogin) {
@@ -79,6 +89,11 @@ export default function Login() {
     }
   }
 
+  const handleModeSwitch = () => {
+    setIsLogin(!isLogin);
+    form.reset({ email: "", password: "", confirmPassword: "" });
+  };
+
   return (
     <div className="min-h-screen bg-background flex flex-col md:flex-row pt-20">
       {/* Editorial Side */}
@@ -119,7 +134,12 @@ export default function Login() {
                   <FormItem>
                     <FormLabel className="font-mono text-xs uppercase tracking-widest">Email</FormLabel>
                     <FormControl>
-                      <Input placeholder="seu@email.com" {...field} className="rounded-none border-black h-12 bg-transparent" />
+                      <Input 
+                        placeholder="seu@email.com" 
+                        {...field} 
+                        className="rounded-none border-black h-12 bg-transparent" 
+                        data-testid="input-email"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -132,15 +152,48 @@ export default function Login() {
                   <FormItem>
                     <FormLabel className="font-mono text-xs uppercase tracking-widest">Senha</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="••••••" {...field} className="rounded-none border-black h-12 bg-transparent" />
+                      <Input 
+                        type="password" 
+                        placeholder="••••••" 
+                        {...field} 
+                        className="rounded-none border-black h-12 bg-transparent" 
+                        data-testid="input-password"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
               
-              <Button type="submit" disabled={isLoading} className="w-full rounded-none h-12 bg-black text-white hover:bg-black/80 uppercase tracking-widest font-mono text-xs flex justify-between items-center px-6">
-                <span>{isLoading ? 'Aguarde...' : (isLogin ? 'Acessar Conta' : 'Registrar')}</span>
+              {!isLogin && (
+                <FormField
+                  control={form.control}
+                  name="confirmPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="font-mono text-xs uppercase tracking-widest">Confirmar Senha</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="password" 
+                          placeholder="••••••" 
+                          {...field} 
+                          className="rounded-none border-black h-12 bg-transparent" 
+                          data-testid="input-confirm-password"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+              
+              <Button 
+                type="submit" 
+                disabled={isLoading} 
+                className="w-full rounded-none h-12 bg-black text-white hover:bg-black/80 uppercase tracking-widest font-mono text-xs flex justify-between items-center px-6"
+                data-testid="button-submit"
+              >
+                <span>{isLoading ? 'Aguarde...' : (isLogin ? 'Acessar Conta' : 'Criar Conta')}</span>
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </form>
@@ -148,8 +201,9 @@ export default function Login() {
 
           <div className="text-center">
             <button 
-              onClick={() => setIsLogin(!isLogin)}
+              onClick={handleModeSwitch}
               className="font-mono text-xs uppercase tracking-widest border-b border-black pb-1 hover:opacity-50 transition-opacity"
+              data-testid="button-toggle-mode"
             >
               {isLogin ? 'Não tem uma conta? Registre-se' : 'Já tem conta? Entre'}
             </button>
