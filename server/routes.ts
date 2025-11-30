@@ -14,6 +14,7 @@ import {
   type User,
 } from "@shared/schema";
 import { sendVerificationEmail, sendPasswordResetEmail } from "./email";
+import { validatePassword, isPasswordValid } from "../shared/passwordStrength";
 
 // Extend Express User type
 declare global {
@@ -112,8 +113,13 @@ export async function registerRoutes(
         return res.status(400).json({ message: "Email e senha são obrigatórios" });
       }
       
-      if (password.length < 6) {
-        return res.status(400).json({ message: "A senha deve ter pelo menos 6 caracteres" });
+      const passwordValidation = validatePassword(password);
+      if (!isPasswordValid(password)) {
+        return res.status(400).json({ 
+          message: "A senha não atende aos requisitos mínimos de segurança",
+          feedback: passwordValidation.feedback,
+          strength: passwordValidation.strength
+        });
       }
       
       const existingUser = await storage.getUserByUsername(username);
@@ -309,8 +315,13 @@ export async function registerRoutes(
         return res.status(400).json({ message: "Token e nova senha são obrigatórios" });
       }
       
-      if (password.length < 6) {
-        return res.status(400).json({ message: "A senha deve ter pelo menos 6 caracteres" });
+      const passwordValidation = validatePassword(password);
+      if (!isPasswordValid(password)) {
+        return res.status(400).json({ 
+          message: "A senha não atende aos requisitos mínimos de segurança",
+          feedback: passwordValidation.feedback,
+          strength: passwordValidation.strength
+        });
       }
       
       const tokenData = await storage.getPasswordResetToken(token);

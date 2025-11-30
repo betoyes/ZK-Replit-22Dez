@@ -39,10 +39,13 @@ export async function getResendClient() {
 }
 
 export async function sendVerificationEmail(to: string, token: string, baseUrl: string) {
-  const { client, fromEmail } = await getResendClient();
-  const verifyUrl = `${baseUrl}/verify-email?token=${token}`;
-  
-  await client.emails.send({
+  console.log(`[Email] Attempting to send verification email to ${to}`);
+  try {
+    const { client, fromEmail } = await getResendClient();
+    console.log(`[Email] Got Resend client, fromEmail: ${fromEmail}`);
+    const verifyUrl = `${baseUrl}/verify-email?token=${token}`;
+    
+    const result = await client.emails.send({
     from: fromEmail || 'ZK REZK <noreply@zkrezk.com>',
     to: [to],
     subject: 'Confirme seu email - ZK REZK',
@@ -82,7 +85,13 @@ export async function sendVerificationEmail(to: string, token: string, baseUrl: 
         </body>
       </html>
     `
-  });
+    });
+    console.log(`[Email] Verification email sent successfully to ${to}`, result);
+    return result;
+  } catch (error) {
+    console.error(`[Email] Failed to send verification email to ${to}:`, error);
+    throw error;
+  }
 }
 
 export async function sendPasswordResetEmail(to: string, token: string, baseUrl: string) {

@@ -9,6 +9,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
 import { ArrowRight, Loader2, Mail } from 'lucide-react';
+import { PasswordStrengthIndicator, usePasswordValidation } from '@/components/ui/password-strength-indicator';
+import { isPasswordValid } from '@shared/passwordStrength';
 
 const loginSchema = z.object({
   email: z.string().email("Email inválido"),
@@ -17,7 +19,10 @@ const loginSchema = z.object({
 
 const registerSchema = z.object({
   email: z.string().email("Email inválido"),
-  password: z.string().min(6, "A senha deve ter no mínimo 6 caracteres"),
+  password: z.string().min(8, "A senha deve ter no mínimo 8 caracteres").refine(
+    (password) => isPasswordValid(password),
+    { message: "A senha não atende aos requisitos de segurança" }
+  ),
   confirmPassword: z.string().min(1, "Confirme sua senha"),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "As senhas não conferem",
@@ -250,6 +255,9 @@ export default function Login() {
                         data-testid="input-password"
                       />
                     </FormControl>
+                    {!isLogin && field.value && (
+                      <PasswordStrengthIndicator password={field.value} />
+                    )}
                     <FormMessage />
                   </FormItem>
                 )}

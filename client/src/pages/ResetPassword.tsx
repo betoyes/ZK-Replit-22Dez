@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { PasswordStrengthIndicator } from "@/components/ui/password-strength-indicator";
+import { isPasswordValid } from "@shared/passwordStrength";
 
 export default function ResetPassword() {
   const [, setLocation] = useLocation();
@@ -61,10 +63,10 @@ export default function ResetPassword() {
       return;
     }
 
-    if (password.length < 6) {
+    if (!isPasswordValid(password)) {
       toast({
         title: "Erro",
-        description: "A senha deve ter pelo menos 6 caracteres.",
+        description: "A senha não atende aos requisitos de segurança.",
         variant: "destructive",
       });
       return;
@@ -196,7 +198,7 @@ export default function ResetPassword() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="pl-10 pr-10"
-                placeholder="Mínimo 6 caracteres"
+                placeholder="Mínimo 8 caracteres"
                 data-testid="input-password"
               />
               <button
@@ -207,6 +209,7 @@ export default function ResetPassword() {
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
+            {password && <PasswordStrengthIndicator password={password} />}
           </div>
 
           <div>
