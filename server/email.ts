@@ -32,9 +32,17 @@ async function getCredentials() {
 
 export async function getResendClient() {
   const { apiKey, fromEmail } = await getCredentials();
+  
+  // Use Resend's test email if the configured domain is not verified (gmail, hotmail, etc.)
+  const unverifiedDomains = ['gmail.com', 'hotmail.com', 'outlook.com', 'yahoo.com'];
+  const emailDomain = fromEmail?.split('@')[1]?.toLowerCase();
+  const safeFromEmail = emailDomain && unverifiedDomains.includes(emailDomain)
+    ? 'ZK REZK <onboarding@resend.dev>'
+    : fromEmail || 'ZK REZK <onboarding@resend.dev>';
+  
   return {
     client: new Resend(apiKey),
-    fromEmail
+    fromEmail: safeFromEmail
   };
 }
 
