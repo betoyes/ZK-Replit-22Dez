@@ -460,10 +460,22 @@ export default function Dashboard() {
             </p>
           </div>
           
-          <div className="flex gap-4">
+          <div className="flex gap-4 items-center">
+            <span className="font-mono text-xs text-muted-foreground">
+              {user?.username}
+            </span>
             <Link href="/" className="text-sm font-mono uppercase tracking-widest hover:underline">
               Voltar ao Site
             </Link>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={handleLogout}
+              className="rounded-none border-black hover:bg-black hover:text-white font-mono text-xs uppercase tracking-widest flex items-center gap-2"
+              data-testid="button-admin-logout"
+            >
+              <LogOut className="h-3 w-3" /> Sair
+            </Button>
           </div>
         </div>
 

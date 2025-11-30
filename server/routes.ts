@@ -101,28 +101,36 @@ export async function registerRoutes(
 
   // ============ AUTH ROUTES ============
   
-  // Register (only for initial setup)
+  // Customer registration endpoint
   app.post("/api/auth/register", async (req, res, next) => {
     try {
-      const { username, password } = insertUserSchema.parse(req.body);
+      const { username, password } = req.body;
       
-      // Check if user already exists
-      const existingUser = await storage.getUserByUsername(username);
-      if (existingUser) {
-        return res.status(400).json({ message: "Usuário já existe" });
+      if (!username || !password) {
+        return res.status(400).json({ message: "Email e senha são obrigatórios" });
       }
       
-      // Hash password
+      if (password.length < 6) {
+        return res.status(400).json({ message: "A senha deve ter pelo menos 6 caracteres" });
+      }
+      
+      const existingUser = await storage.getUserByUsername(username);
+      if (existingUser) {
+        return res.status(400).json({ message: "Este email já está em uso" });
+      }
+      
       const hashedPassword = await bcrypt.hash(password, 10);
       
       const user = await storage.createUser({
         username,
         password: hashedPassword,
+        role: 'customer',
       });
       
       res.status(201).json({
         id: user.id,
         username: user.username,
+        role: user.role,
       });
     } catch (err) {
       next(err);
