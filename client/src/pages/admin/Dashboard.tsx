@@ -295,13 +295,13 @@ export default function Dashboard() {
   );
 
   const salesData = [
-    { name: "Seg", total: 1200 },
-    { name: "Ter", total: 2400 },
-    { name: "Qua", total: 1800 },
-    { name: "Qui", total: 4500 },
-    { name: "Sex", total: 6000 },
-    { name: "Sab", total: 8500 },
-    { name: "Dom", total: 3200 },
+    { name: "Seg", total: 0 },
+    { name: "Ter", total: 0 },
+    { name: "Qua", total: 0 },
+    { name: "Qui", total: 0 },
+    { name: "Sex", total: 0 },
+    { name: "Sab", total: 0 },
+    { name: "Dom", total: 0 },
   ];
 
   // Product Handlers
