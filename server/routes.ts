@@ -155,17 +155,13 @@ export async function registerRoutes(
         // Continue registration even if email fails
       }
 
-      // Auto-subscribe to newsletter
+      // Auto-subscribe as lead (registered but no purchase yet)
       try {
-        const existingSubscriber = await storage.getSubscriberByEmail(username.toLowerCase());
-        if (!existingSubscriber) {
-          await storage.createSubscriber({
-            name: username.split('@')[0],
-            email: username.toLowerCase(),
-            date: new Date().toISOString().split('T')[0],
-            status: 'active',
-          });
-        }
+        await storage.createOrUpdateSubscriber(
+          username.toLowerCase(),
+          username.split('@')[0],
+          'lead'
+        );
       } catch (subErr) {
         console.error("Failed to auto-subscribe customer:", subErr);
       }
@@ -740,8 +736,14 @@ export async function registerRoutes(
   
   app.get("/api/subscribers", requireAuth, async (req, res, next) => {
     try {
-      const subscribers = await storage.getSubscribers();
-      res.json(subscribers);
+      const { type } = req.query;
+      let subscribersList;
+      if (type && typeof type === 'string') {
+        subscribersList = await storage.getSubscribersByType(type);
+      } else {
+        subscribersList = await storage.getSubscribers();
+      }
+      res.json(subscribersList);
     } catch (err) {
       next(err);
     }
@@ -757,7 +759,11 @@ export async function registerRoutes(
         return res.status(400).json({ message: "Email já cadastrado" });
       }
       
-      const subscriber = await storage.createSubscriber(data);
+      // Default type is 'newsletter' for signups from the site footer
+      const subscriber = await storage.createSubscriber({
+        ...data,
+        type: data.type || 'newsletter',
+      });
       res.status(201).json(subscriber);
     } catch (err) {
       next(err);
@@ -882,6 +888,24 @@ export async function registerRoutes(
     try {
       const data = insertOrderSchema.parse(req.body);
       const order = await storage.createOrder(data);
+      
+      // Upgrade or create subscriber as customer when order is created
+      if (data.customerId) {
+        try {
+          const customer = await storage.getCustomerById(data.customerId);
+          if (customer?.email) {
+            // Use createOrUpdateSubscriber to ensure customer is added/upgraded
+            await storage.createOrUpdateSubscriber(
+              customer.email,
+              customer.name,
+              'customer'
+            );
+          }
+        } catch (subErr) {
+          console.error("Failed to upgrade subscriber to customer:", subErr);
+        }
+      }
+      
       res.status(201).json(order);
     } catch (err) {
       next(err);

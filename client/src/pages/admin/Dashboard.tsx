@@ -39,6 +39,7 @@ interface Subscriber {
   email: string;
   date: string;
   status: string;
+  type: string;
 }
 
 export default function Dashboard() {
@@ -252,9 +253,34 @@ export default function Dashboard() {
   // Newsletter management state
   const [isAddSubscriberOpen, setIsAddSubscriberOpen] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
-  const [subscriberFormData, setSubscriberFormData] = useState({ name: '', email: '' });
+  const [subscriberFormData, setSubscriberFormData] = useState({ name: '', email: '', type: 'newsletter' });
   const [importText, setImportText] = useState('');
   const [isImporting, setIsImporting] = useState(false);
+  const [subscriberFilter, setSubscriberFilter] = useState<'all' | 'newsletter' | 'lead' | 'customer'>('all');
+
+  // Filter subscribers by type
+  const filteredSubscribers = subscriberFilter === 'all' 
+    ? subscribers 
+    : subscribers.filter(s => s.type === subscriberFilter);
+  
+  // Get subscriber type counts
+  const subscriberCounts = {
+    all: subscribers.length,
+    newsletter: subscribers.filter(s => s.type === 'newsletter' || !s.type).length,
+    lead: subscribers.filter(s => s.type === 'lead').length,
+    customer: subscribers.filter(s => s.type === 'customer').length,
+  };
+
+  const getTypeBadge = (type: string) => {
+    switch (type) {
+      case 'customer':
+        return <span className="px-2 py-1 text-[10px] bg-emerald-600 text-white">Cliente</span>;
+      case 'lead':
+        return <span className="px-2 py-1 text-[10px] bg-amber-500 text-white">Lead</span>;
+      default:
+        return <span className="px-2 py-1 text-[10px] bg-gray-600 text-white">Newsletter</span>;
+    }
+  };
 
   const filteredProducts = products.filter(p => 
     p.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -475,10 +501,11 @@ export default function Dashboard() {
 
   const handleDownloadSubscribers = () => {
     const csvContent = [
-      "ID,Nome,Email,Data,Status",
-      ...subscribers.map(s => `${s.id},"${s.name || ''}",${s.email},${s.date},${s.status}`)
+      "ID,Nome,Email,Tipo,Data,Status",
+      ...filteredSubscribers.map(s => `${s.id},"${s.name || ''}",${s.email},${s.type || 'newsletter'},${s.date},${s.status}`)
     ].join('\n');
-    downloadCSV(csvContent, 'newsletter.csv');
+    const filename = subscriberFilter === 'all' ? 'todos_assinantes.csv' : `${subscriberFilter}.csv`;
+    downloadCSV(csvContent, filename);
   };
 
   const handleAddSubscriber = async () => {
@@ -495,7 +522,8 @@ export default function Dashboard() {
           name: subscriberFormData.name || subscriberFormData.email.split('@')[0],
           email: subscriberFormData.email.toLowerCase(),
           date: new Date().toISOString().split('T')[0],
-          status: 'active'
+          status: 'active',
+          type: subscriberFormData.type || 'newsletter'
         })
       });
       
@@ -505,7 +533,7 @@ export default function Dashboard() {
       }
       
       toast({ title: "Sucesso", description: "Assinante adicionado com sucesso" });
-      setSubscriberFormData({ name: '', email: '' });
+      setSubscriberFormData({ name: '', email: '', type: 'newsletter' });
       setIsAddSubscriberOpen(false);
       fetchSubscribers();
     } catch (err: any) {
@@ -1266,8 +1294,48 @@ export default function Dashboard() {
 
           {/* NEWSLETTER TAB */}
           <TabsContent value="newsletter" className="space-y-6">
+             {/* Subscriber Type Filters */}
+             <div className="flex flex-wrap gap-2 pb-2 border-b border-border">
+               <Button 
+                 variant={subscriberFilter === 'all' ? 'default' : 'outline'}
+                 size="sm"
+                 onClick={() => setSubscriberFilter('all')}
+                 className={`rounded-none font-mono text-xs ${subscriberFilter === 'all' ? 'bg-black text-white' : 'border-black'}`}
+                 data-testid="filter-all-subscribers"
+               >
+                 Todos ({subscriberCounts.all})
+               </Button>
+               <Button 
+                 variant={subscriberFilter === 'newsletter' ? 'default' : 'outline'}
+                 size="sm"
+                 onClick={() => setSubscriberFilter('newsletter')}
+                 className={`rounded-none font-mono text-xs ${subscriberFilter === 'newsletter' ? 'bg-gray-600 text-white' : 'border-gray-600'}`}
+                 data-testid="filter-newsletter-subscribers"
+               >
+                 Newsletter ({subscriberCounts.newsletter})
+               </Button>
+               <Button 
+                 variant={subscriberFilter === 'lead' ? 'default' : 'outline'}
+                 size="sm"
+                 onClick={() => setSubscriberFilter('lead')}
+                 className={`rounded-none font-mono text-xs ${subscriberFilter === 'lead' ? 'bg-amber-500 text-white' : 'border-amber-500 text-amber-600'}`}
+                 data-testid="filter-lead-subscribers"
+               >
+                 Leads ({subscriberCounts.lead})
+               </Button>
+               <Button 
+                 variant={subscriberFilter === 'customer' ? 'default' : 'outline'}
+                 size="sm"
+                 onClick={() => setSubscriberFilter('customer')}
+                 className={`rounded-none font-mono text-xs ${subscriberFilter === 'customer' ? 'bg-emerald-600 text-white' : 'border-emerald-600 text-emerald-600'}`}
+                 data-testid="filter-customer-subscribers"
+               >
+                 Clientes ({subscriberCounts.customer})
+               </Button>
+             </div>
+
              <div className="flex justify-between items-center">
-               <p className="text-muted-foreground font-mono text-xs">{subscribers.length} assinantes</p>
+               <p className="text-muted-foreground font-mono text-xs">{filteredSubscribers.length} assinantes {subscriberFilter !== 'all' && `(${subscriberFilter})`}</p>
                <div className="flex gap-3">
                  <Dialog open={isAddSubscriberOpen} onOpenChange={setIsAddSubscriberOpen}>
                    <DialogTrigger asChild>
@@ -1300,6 +1368,22 @@ export default function Dashboard() {
                            placeholder="email@exemplo.com"
                            data-testid="input-subscriber-email"
                          />
+                       </div>
+                       <div className="grid gap-2">
+                         <Label>Tipo</Label>
+                         <Select 
+                           value={subscriberFormData.type} 
+                           onValueChange={(value) => setSubscriberFormData({...subscriberFormData, type: value})}
+                         >
+                           <SelectTrigger className="rounded-none" data-testid="select-subscriber-type">
+                             <SelectValue />
+                           </SelectTrigger>
+                           <SelectContent>
+                             <SelectItem value="newsletter">Newsletter</SelectItem>
+                             <SelectItem value="lead">Lead</SelectItem>
+                             <SelectItem value="customer">Cliente</SelectItem>
+                           </SelectContent>
+                         </Select>
                        </div>
                      </div>
                      <DialogFooter>
@@ -1355,23 +1439,30 @@ export default function Dashboard() {
                   <TableRow className="hover:bg-transparent border-b border-border">
                     <TableHead className="font-mono text-xs uppercase tracking-widest text-muted-foreground h-12">Nome</TableHead>
                     <TableHead className="font-mono text-xs uppercase tracking-widest text-muted-foreground h-12">Email</TableHead>
+                    <TableHead className="font-mono text-xs uppercase tracking-widest text-muted-foreground h-12">Tipo</TableHead>
                     <TableHead className="font-mono text-xs uppercase tracking-widest text-muted-foreground h-12">Data</TableHead>
                     <TableHead className="font-mono text-xs uppercase tracking-widest text-muted-foreground h-12">Status</TableHead>
                     <TableHead className="font-mono text-xs uppercase tracking-widest text-muted-foreground h-12 text-right">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {subscribers.length === 0 ? (
+                  {filteredSubscribers.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
-                        Nenhum assinante ainda. Adicione ou importe contatos.
+                      <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                        {subscriberFilter === 'all' 
+                          ? 'Nenhum assinante ainda. Adicione ou importe contatos.'
+                          : `Nenhum assinante do tipo "${subscriberFilter === 'newsletter' ? 'Newsletter' : subscriberFilter === 'lead' ? 'Lead' : 'Cliente'}".`
+                        }
                       </TableCell>
                     </TableRow>
                   ) : (
-                    subscribers.map((sub) => (
+                    filteredSubscribers.map((sub) => (
                       <TableRow key={sub.id} className="hover:bg-secondary/30 border-b border-border transition-colors" data-testid={`row-subscriber-${sub.id}`}>
                         <TableCell className="font-display text-base">{sub.name || '-'}</TableCell>
                         <TableCell className="font-mono text-sm">{sub.email}</TableCell>
+                        <TableCell className="font-mono text-xs uppercase">
+                          {getTypeBadge(sub.type || 'newsletter')}
+                        </TableCell>
                         <TableCell className="font-mono text-xs text-muted-foreground">{sub.date}</TableCell>
                         <TableCell className="font-mono text-xs uppercase">
                           <span className={`px-2 py-1 text-[10px] ${sub.status === 'active' ? 'bg-black text-white' : 'bg-gray-300 text-gray-700'}`}>

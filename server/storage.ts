@@ -58,10 +58,13 @@ export interface IStorage {
 
   // Subscribers
   getSubscribers(): Promise<Subscriber[]>;
+  getSubscribersByType(type: string): Promise<Subscriber[]>;
   getSubscriberByEmail(email: string): Promise<Subscriber | undefined>;
   createSubscriber(subscriber: InsertSubscriber): Promise<Subscriber>;
+  createOrUpdateSubscriber(email: string, name: string, type: string): Promise<Subscriber>;
   createSubscribersBulk(subscribers: InsertSubscriber[]): Promise<{ inserted: number; skipped: number }>;
   updateSubscriber(id: number, subscriber: Partial<InsertSubscriber>): Promise<Subscriber | undefined>;
+  upgradeSubscriberToCustomer(email: string): Promise<Subscriber | undefined>;
   deleteSubscriber(id: number): Promise<void>;
 
   // Customers
@@ -245,6 +248,10 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(subscribers).orderBy(desc(subscribers.id));
   }
 
+  async getSubscribersByType(type: string): Promise<Subscriber[]> {
+    return await db.select().from(subscribers).where(eq(subscribers.type, type)).orderBy(desc(subscribers.id));
+  }
+
   async getSubscriberByEmail(email: string): Promise<Subscriber | undefined> {
     const [subscriber] = await db.select().from(subscribers).where(eq(subscribers.email, email));
     return subscriber || undefined;
@@ -252,6 +259,31 @@ export class DatabaseStorage implements IStorage {
 
   async createSubscriber(subscriber: InsertSubscriber): Promise<Subscriber> {
     const [newSubscriber] = await db.insert(subscribers).values(subscriber).returning();
+    return newSubscriber;
+  }
+
+  async createOrUpdateSubscriber(email: string, name: string, type: string): Promise<Subscriber> {
+    const existing = await this.getSubscriberByEmail(email.toLowerCase());
+    if (existing) {
+      const typeOrder = { newsletter: 1, lead: 2, customer: 3 };
+      const existingOrder = typeOrder[existing.type as keyof typeof typeOrder] || 0;
+      const newOrder = typeOrder[type as keyof typeof typeOrder] || 0;
+      if (newOrder > existingOrder) {
+        const [updated] = await db.update(subscribers)
+          .set({ type, name: name || existing.name })
+          .where(eq(subscribers.id, existing.id))
+          .returning();
+        return updated;
+      }
+      return existing;
+    }
+    const [newSubscriber] = await db.insert(subscribers).values({
+      email: email.toLowerCase(),
+      name,
+      date: new Date().toISOString().split('T')[0],
+      status: 'active',
+      type,
+    }).returning();
     return newSubscriber;
   }
 
@@ -268,6 +300,7 @@ export class DatabaseStorage implements IStorage {
           await db.insert(subscribers).values({
             ...sub,
             email: sub.email.toLowerCase(),
+            type: sub.type || 'newsletter',
           });
           inserted++;
         }
@@ -282,6 +315,18 @@ export class DatabaseStorage implements IStorage {
   async updateSubscriber(id: number, subscriber: Partial<InsertSubscriber>): Promise<Subscriber | undefined> {
     const [updated] = await db.update(subscribers).set(subscriber).where(eq(subscribers.id, id)).returning();
     return updated || undefined;
+  }
+
+  async upgradeSubscriberToCustomer(email: string): Promise<Subscriber | undefined> {
+    const existing = await this.getSubscriberByEmail(email.toLowerCase());
+    if (existing) {
+      const [updated] = await db.update(subscribers)
+        .set({ type: 'customer' })
+        .where(eq(subscribers.id, existing.id))
+        .returning();
+      return updated;
+    }
+    return undefined;
   }
 
   async deleteSubscriber(id: number): Promise<void> {

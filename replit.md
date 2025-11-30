@@ -100,7 +100,7 @@ Preferred communication style: Simple, everyday language.
 - **Collections**: Curated product groupings (Eternal, Aurora, etc.)
 - **Products**: Jewelry items with pricing, images, specs, bestseller/new flags
 - **Journal Posts**: Editorial content with categories and excerpts
-- **Subscribers**: Newsletter email list
+- **Subscribers**: Email list with segmentation (newsletter, lead, customer types)
 - **Customers**: Extended customer profiles (separate from users)
 - **Orders**: Purchase records with status tracking
 - **Branding**: Configurable site content (hero text, manifesto, company name)
