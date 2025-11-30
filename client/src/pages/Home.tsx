@@ -99,7 +99,7 @@ export default function Home() {
         >
           {branding.heroMediaType === 'video' ? (
             <video 
-              src={branding.heroMediaUrl} 
+              src={branding.heroMediaUrl || heroImage} 
               autoPlay 
               loop 
               muted 
@@ -108,22 +108,22 @@ export default function Home() {
             />
           ) : (
             <img 
-              src={branding.heroMediaUrl} 
+              src={branding.heroMediaUrl || heroImage} 
               alt="Luxury Jewelry Model" 
               className="w-full h-full object-cover grayscale contrast-125"
             />
           )}
         </motion.div>
         
-        <div className="absolute inset-0 flex flex-col justify-between p-6 md:p-12 z-10 mix-blend-difference text-white pointer-events-none">
+        <div className="absolute inset-0 flex flex-col justify-between p-6 md:p-12 z-50 mix-blend-difference text-white pointer-events-none">
           <div className="flex justify-between items-start">
             <span className="font-mono text-xs tracking-[0.5em] uppercase"></span>
-            <span className="font-mono text-xs tracking-[0.5em] uppercase text-right hidden md:block">
-              São Paulo<br/>Paris<br/>Tóquio
+            <span className="hidden md:flex flex-col items-end gap-2">
+              <span className="font-mono text-[10px] tracking-[0.5em] uppercase">Est. 2026</span>
             </span>
           </div>
           
-          <div className="space-y-6">
+          <div className="space-y-4">
             <h1 className="font-display text-[12vw] leading-[0.8] font-bold tracking-tighter uppercase">
               {branding.heroTitle.split('\n').map((line, i) => (
                 <span key={i} className="block">
@@ -131,7 +131,7 @@ export default function Home() {
                 </span>
               ))}
             </h1>
-            <p className="font-mono text-xs tracking-[0.3em] uppercase opacity-80 max-w-md font-light">
+            <p className="font-mono text-xs tracking-[0.3em] uppercase opacity-90 font-light">
               {branding.heroSubtitle}
             </p>
           </div>
