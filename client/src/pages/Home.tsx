@@ -126,7 +126,7 @@ export default function Home() {
         <div className="absolute left-6 md:left-12 bottom-32 z-[60]">
           <div className="inline-block px-4 py-2 pl-[20px] pr-[20px] pt-[8px] pb-[8px] mt-[50px] mb-[50px] bg-[#2626267a]">
             <p className="font-mono text-sm md:text-base tracking-[0.2em] uppercase text-white font-light">
-              {branding.heroSubtitle}
+              Elegância que não grita, impõe
             </p>
           </div>
         </div>
