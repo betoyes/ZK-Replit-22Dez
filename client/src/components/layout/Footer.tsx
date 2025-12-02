@@ -40,6 +40,7 @@ export function Footer() {
             <h4 className="font-mono text-xs uppercase tracking-widest mb-8 text-muted-foreground">Editorial</h4>
             <ul className="space-y-4">
               <li><Link href="/journal" className="font-display text-xl hover:text-muted-foreground transition-colors">Journal</Link></li>
+              <li><Link href="/manifesto" className="font-display text-xl hover:text-muted-foreground transition-colors">Manifesto</Link></li>
               <li><Link href="/lookbook" className="font-display text-xl hover:text-muted-foreground transition-colors">Lookbook</Link></li>
               <li><Link href="/about" className="font-display text-xl hover:text-muted-foreground transition-colors">Sobre</Link></li>
             </ul>

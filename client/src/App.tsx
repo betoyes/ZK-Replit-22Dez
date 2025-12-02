@@ -29,6 +29,7 @@ import Collections from "@/pages/Collections";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import TermsOfUse from "@/pages/TermsOfUse";
 import VerifyEmail from "@/pages/VerifyEmail";
+import Manifesto from "@/pages/Manifesto";
 import ForgotPassword from "@/pages/ForgotPassword";
 import ResetPassword from "@/pages/ResetPassword";
 
@@ -58,6 +59,7 @@ function Router() {
         <Route path="/lookbook" component={Lookbook} />
         <Route path="/privacy-policy" component={PrivacyPolicy} />
         <Route path="/terms-of-use" component={TermsOfUse} />
+        <Route path="/manifesto" component={Manifesto} />
         <Route component={NotFound} />
       </Switch>
     </PageTransition>
