@@ -53,11 +53,11 @@ export default function Product() {
     categories.find(c => c.id === product.categoryId)?.name?.toLowerCase().includes('anéis')
   );
 
-  // Build versions for rings - use main image and gallery images as different versions
+  // Build versions for rings - use version1, version2, version3 fields
   const ringVersions = product ? [
-    { version: 1, image: product.imageColor || product.image, name: 'Versão 1' },
-    { version: 2, image: (product.gallery as any)?.[0] || product.image, name: 'Versão 2' },
-    { version: 3, image: (product.gallery as any)?.[1] || (product.gallery as any)?.[0] || product.image, name: 'Versão 3' },
+    { version: 1, image: (product as any).version1 || product.imageColor || product.image, name: 'Versão 1' },
+    { version: 2, image: (product as any).version2 || (product.gallery as any)?.[0] || product.image, name: 'Versão 2' },
+    { version: 3, image: (product as any).version3 || (product.gallery as any)?.[1] || product.image, name: 'Versão 3' },
   ] : [];
 
   // Get current price based on stone type
@@ -174,6 +174,36 @@ export default function Product() {
                       />
                      </button>
                    ))}
+                 </div>
+               )}
+
+               {/* Product Video */}
+               {(product as any).video && (
+                 <div className="mt-8">
+                   <h3 className="font-mono text-xs uppercase tracking-widest text-muted-foreground mb-4">Vídeo do Produto</h3>
+                   <div className="aspect-video bg-secondary overflow-hidden rounded-none border border-border">
+                     {(product as any).video.includes('youtube.com') || (product as any).video.includes('youtu.be') ? (
+                       <iframe
+                         src={(product as any).video.replace('watch?v=', 'embed/').replace('youtu.be/', 'youtube.com/embed/')}
+                         className="w-full h-full"
+                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                         allowFullScreen
+                       />
+                     ) : (product as any).video.includes('vimeo.com') ? (
+                       <iframe
+                         src={(product as any).video.replace('vimeo.com/', 'player.vimeo.com/video/')}
+                         className="w-full h-full"
+                         allow="autoplay; fullscreen; picture-in-picture"
+                         allowFullScreen
+                       />
+                     ) : (
+                       <video
+                         src={(product as any).video}
+                         controls
+                         className="w-full h-full object-cover"
+                       />
+                     )}
+                   </div>
                  </div>
                )}
              </div>
