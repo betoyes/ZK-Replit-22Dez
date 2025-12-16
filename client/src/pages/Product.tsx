@@ -152,12 +152,6 @@ export default function Product() {
     .filter(p => p.categoryId === product.categoryId && p.id !== product.id)
     .slice(0, 3);
 
-  // All images for carousel (Main + Gallery)
-  const allImages = [
-    product.imageColor || product.image,
-    ...(product.gallery || [])
-  ].filter(Boolean);
-
   return (
     <div className="min-h-screen bg-background pt-32 pb-24">
       <div className="container mx-auto px-6 md:px-12">
@@ -178,28 +172,6 @@ export default function Product() {
                   className="w-full h-full object-cover transition-opacity duration-300"
                 />
                </div>
-               
-               {/* Small Carousel / Thumbnails */}
-               {allImages.length > 1 && (
-                 <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide snap-x">
-                   {allImages.map((img, idx) => (
-                     <button 
-                        key={idx} 
-                        onClick={() => setMainImage(img)}
-                        className={`shrink-0 w-24 aspect-[3/4] bg-secondary overflow-hidden border transition-all snap-start ${
-                          mainImage === img ? 'border-black ring-1 ring-black opacity-100' : 'border-transparent hover:border-gray-300 opacity-70 hover:opacity-100'
-                        }`}
-                     >
-                       <img 
-                        src={img} 
-                        alt={`${product.name} thumbnail ${idx + 1}`} 
-                        className="w-full h-full object-cover"
-                      />
-                     </button>
-                   ))}
-                 </div>
-               )}
-
              </div>
           </div>
 
