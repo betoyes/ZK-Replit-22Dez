@@ -169,6 +169,7 @@ export default function Product() {
                  <img 
                   src={mainImage || product.image || product.imageColor} 
                   alt={product.name} 
+                  loading="lazy"
                   className="w-full h-full object-cover transition-opacity duration-300"
                 />
                </div>
@@ -241,6 +242,7 @@ export default function Product() {
                         <img 
                           src={v.image} 
                           alt={v.name}
+                          loading="lazy"
                           className={`w-full h-full object-cover transition-all duration-300 ${
                             selectedVersion === v.version ? 'opacity-100' : 'opacity-60 group-hover:opacity-100'
                           }`}
@@ -272,6 +274,7 @@ export default function Product() {
                       <img 
                         src={product.image} 
                         alt="Principal"
+                        loading="lazy"
                         className={`w-full h-full object-cover transition-all duration-300 ${
                           mainImage === product.image ? 'opacity-100' : 'opacity-60 group-hover:opacity-100'
                         }`}
@@ -519,6 +522,7 @@ export default function Product() {
                     <img 
                       src={related.image} 
                       alt={related.name}
+                      loading="lazy"
                       className="w-full h-full object-cover transition-all duration-700 group-hover:scale-105 grayscale group-hover:grayscale-0"
                     />
                   </div>

@@ -289,12 +289,14 @@ export default function Home() {
                     <img 
                       src={product.image} 
                       alt={product.name}
+                      loading="lazy"
                       className={`w-full h-full object-cover transition-all duration-500 group-hover:scale-110 ${(!product.imageColor || product.image === product.imageColor) ? 'grayscale group-hover:grayscale-0' : ''}`}
                     />
                     {product.imageColor && product.image !== product.imageColor && (
                       <img 
                         src={product.imageColor} 
                         alt={product.name}
+                        loading="lazy"
                         className="absolute inset-0 w-full h-full object-cover transition-all duration-500 group-hover:scale-110 opacity-0 group-hover:opacity-100"
                       />
                     )}

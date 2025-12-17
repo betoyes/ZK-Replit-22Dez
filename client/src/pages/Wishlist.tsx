@@ -53,6 +53,7 @@ export default function Wishlist() {
                     <img 
                       src={product.image} 
                       alt={product.name}
+                      loading="lazy"
                       className="w-full h-full object-cover transition-all duration-700 group-hover:scale-105 grayscale group-hover:grayscale-0"
                     />
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />

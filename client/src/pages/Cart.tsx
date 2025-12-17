@@ -64,7 +64,7 @@ export default function Cart() {
                   <div key={product.id} className="flex flex-col md:flex-row items-center gap-6 border-b border-border pb-8 md:pb-4 md:border-none">
                     <div className="w-full md:flex-1 flex items-center gap-6">
                       <div className="h-24 w-24 bg-secondary/20 overflow-hidden shrink-0">
-                        <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+                        <img src={product.image} alt={product.name} loading="lazy" className="w-full h-full object-cover" />
                       </div>
                       <div>
                         <div className="text-xs text-primary uppercase tracking-wider mb-1">{collections.find(c => c.id === product.collectionId)?.name || ''}</div>
