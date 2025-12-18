@@ -68,6 +68,8 @@ export const products = pgTable("products", {
   descriptionZirconia: text("description_zirconia"),
   specsDiamondSynthetic: text("specs_diamond_synthetic").array(),
   specsZirconia: text("specs_zirconia").array(),
+  // Main stone name for the base price
+  mainStoneName: text("main_stone_name"), // Name for the base price (e.g., "Diamante Natural")
   // Dynamic stone variations - JSON array of {name, price, description}
   stoneVariations: text("stone_variations"), // JSON string: [{name: "Diamante Natural", price: 10000, description: "..."}]
 });

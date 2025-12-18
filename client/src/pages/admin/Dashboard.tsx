@@ -190,6 +190,7 @@ export default function Dashboard() {
   const [formData, setFormData] = useState({
     name: '',
     price: '',
+    mainStoneName: '', // Name for the main/base price stone type
     description: '',
     category: '',
     collection: '',
@@ -418,6 +419,7 @@ export default function Dashboard() {
     addProduct({
       name: formData.name,
       price: parsePriceToNumber(formData.price),
+      mainStoneName: formData.mainStoneName || undefined,
       description: formData.description,
       categoryId: selectedCategory ? selectedCategory.id : undefined,
       collectionId: selectedCollection ? selectedCollection.id : undefined,
@@ -468,6 +470,7 @@ export default function Dashboard() {
     updateProduct(currentProduct.id, {
       name: formData.name,
       price: parsePriceToNumber(formData.price),
+      mainStoneName: formData.mainStoneName || undefined,
       description: formData.description,
       categoryId: selectedCategory ? selectedCategory.id : undefined,
       collectionId: selectedCollection ? selectedCollection.id : undefined,
@@ -532,6 +535,7 @@ export default function Dashboard() {
     setFormData({
       name: product.name,
       price: formatPriceForDisplay(product.price),
+      mainStoneName: product.mainStoneName || '',
       description: product.description,
       category: product.categoryId ? String(product.categoryId) : '',
       collection: product.collectionId ? String(product.collectionId) : '',
@@ -562,6 +566,7 @@ export default function Dashboard() {
     setFormData({
       name: '',
       price: '',
+      mainStoneName: '',
       description: '',
       category: '',
       collection: '',
@@ -978,21 +983,34 @@ export default function Dashboard() {
                           <Input id="name" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="rounded-none" />
                         </div>
                         
-                        <div className="grid gap-2">
-                          <Label htmlFor="price">Preço (R$)</Label>
-                          <div className="relative">
-                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">R$</span>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="grid gap-2">
+                            <Label htmlFor="mainStoneName">Nome da Pedra Principal</Label>
                             <Input 
-                              id="price" 
+                              id="mainStoneName" 
                               type="text" 
-                              value={formData.price} 
-                              onChange={(e) => {
-                                const value = e.target.value.replace(/[^\d,]/g, '');
-                                setFormData({...formData, price: value});
-                              }} 
-                              placeholder="0,00"
-                              className="rounded-none pl-10" 
+                              value={formData.mainStoneName} 
+                              onChange={(e) => setFormData({...formData, mainStoneName: e.target.value})} 
+                              placeholder="Ex: Diamante Natural"
+                              className="rounded-none" 
                             />
+                          </div>
+                          <div className="grid gap-2">
+                            <Label htmlFor="price">Preço (R$)</Label>
+                            <div className="relative">
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">R$</span>
+                              <Input 
+                                id="price" 
+                                type="text" 
+                                value={formData.price} 
+                                onChange={(e) => {
+                                  const value = e.target.value.replace(/[^\d,]/g, '');
+                                  setFormData({...formData, price: value});
+                                }} 
+                                placeholder="0,00"
+                                className="rounded-none pl-10" 
+                              />
+                            </div>
                           </div>
                         </div>
                         
