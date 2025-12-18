@@ -18,6 +18,7 @@ interface ProductContextType {
   wishlist: number[];
   branding: Branding;
   cart: CartItem[];
+  isLoading: boolean;
   
   addProduct: (product: Omit<Product, 'id'>) => Promise<void>;
   updateProduct: (id: number, product: Partial<Product>) => Promise<void>;
@@ -56,16 +57,39 @@ export function ProductProvider({ children }: { children: ReactNode }) {
   const [wishlist, setWishlist] = useState<number[]>([]);
   const [branding, setBranding] = useState<Branding>(initialBranding);
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Load data from server on mount
   useEffect(() => {
-    Promise.all([
-      fetch('/api/products').then(r => r.json()).then(data => setProducts(data || [])).catch(() => setProducts([])),
-      fetch('/api/categories').then(r => r.json()).then(data => setCategories(data || [])).catch(() => setCategories([])),
-      fetch('/api/collections').then(r => r.json()).then(data => setCollections(data || [])).catch(() => setCollections([])),
-      fetch('/api/journal').then(r => r.json()).then(data => setPosts(data || [])).catch(() => setPosts([])),
-      fetch('/api/branding').then(r => r.json()).then(data => setBranding(data || initialBranding)).catch(() => setBranding(initialBranding)),
-    ]).catch(err => console.error('Failed to load initial data:', err));
+    const loadData = async () => {
+      try {
+        const [productsRes, categoriesRes, collectionsRes, postsRes, brandingRes] = await Promise.all([
+          fetch('/api/products'),
+          fetch('/api/categories'),
+          fetch('/api/collections'),
+          fetch('/api/journal'),
+          fetch('/api/branding'),
+        ]);
+        
+        const productsData = await productsRes.json().catch(() => []);
+        const categoriesData = await categoriesRes.json().catch(() => []);
+        const collectionsData = await collectionsRes.json().catch(() => []);
+        const postsData = await postsRes.json().catch(() => []);
+        const brandingData = await brandingRes.json().catch(() => initialBranding);
+        
+        setProducts(productsData || []);
+        setCategories(categoriesData || []);
+        setCollections(collectionsData || []);
+        setPosts(postsData || []);
+        setBranding(brandingData || initialBranding);
+      } catch (err) {
+        console.error('Failed to load initial data:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadData();
   }, []);
 
   // Branding
@@ -334,7 +358,7 @@ export function ProductProvider({ children }: { children: ReactNode }) {
 
   return (
     <ProductContext.Provider value={{ 
-      products, categories, collections, orders, customers, posts, wishlist, cart,
+      products, categories, collections, orders, customers, posts, wishlist, cart, isLoading,
       addProduct, updateProduct, deleteProduct,
       addCategory, deleteCategory,
       addCollection, deleteCollection,

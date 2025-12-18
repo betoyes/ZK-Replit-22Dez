@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'wouter';
-import { categories } from '@/lib/mockData';
 import { useProducts } from '@/context/ProductContext';
 import { Slider } from '@/components/ui/slider';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -11,14 +10,15 @@ import { ArrowRight, Heart, ChevronDown } from 'lucide-react';
 import StoneSelector, { hasStoneVariations, getStonePrice } from '@/components/StoneSelector';
 
 export default function Shop() {
-  const { products, categories, collections, wishlist, toggleWishlist } = useProducts();
+  const { products, categories, collections, wishlist, toggleWishlist, isLoading } = useProducts();
   const [location] = useLocation();
   const urlParams = new URLSearchParams(window.location.search);
   const initialCategory = urlParams.get('category') || 'all';
+  const initialCollection = urlParams.get('collection') || '';
   const searchQuery = urlParams.get('search') || '';
 
   const [selectedCategories, setSelectedCategories] = useState<string[]>(initialCategory === 'all' ? [] : [initialCategory]);
-  const [selectedCollections, setSelectedCollections] = useState<string[]>([]);
+  const [selectedCollections, setSelectedCollections] = useState<string[]>(initialCollection ? [initialCollection] : []);
   const [priceRange, setPriceRange] = useState([0, 50000]);
   const [sortOption, setSortOption] = useState('newest');
   const [selectedStoneTypes, setSelectedStoneTypes] = useState<Record<number, string>>({});
@@ -36,6 +36,13 @@ export default function Shop() {
     }
   }, [initialCategory]);
 
+  // Update selected collections if URL changes
+  useEffect(() => {
+    if (initialCollection && !selectedCollections.includes(initialCollection)) {
+      setSelectedCollections([initialCollection]);
+    }
+  }, [initialCollection]);
+
   const filteredProducts = (Array.isArray(products) ? products : []).filter(product => {
     // Search Filter
     if (searchQuery && !product.name.toLowerCase().includes(searchQuery.toLowerCase())) {
@@ -47,10 +54,9 @@ export default function Shop() {
     const categoryMatch = selectedCategories.length === 0 || 
       (productCategory && selectedCategories.includes(productCategory.slug || String(productCategory.id)));
     
-    // Collection Filter - compare by slug or ID
-    const productCollection = collections.find(c => c.id === product.collectionId);
+    // Collection Filter - compare by ID
     const collectionMatch = selectedCollections.length === 0 || 
-      (productCollection && selectedCollections.includes(productCollection.slug || String(productCollection.id)));
+      selectedCollections.includes(String(product.collectionId));
     
     // Price Filter - priceRange is in reais, product.price is in centavos
     const priceInReais = product.price / 100;
@@ -84,6 +90,17 @@ export default function Shop() {
     window.history.pushState({}, '', '/shop'); // Clear URL params
   };
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background pt-32 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-2 border-black border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="font-mono text-sm text-muted-foreground uppercase tracking-widest">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background pt-32">
       <div className="container mx-auto px-6 md:px-12 pb-24">
@@ -98,7 +115,7 @@ export default function Shop() {
              <p className="font-mono text-sm text-muted-foreground uppercase tracking-widest max-w-md">Seleção curada de jóias para pessoas com bom gosto.</p>
           </div>
           <div className="flex flex-col items-end gap-4">
-            <div className="font-mono text-xs mb-2">
+            <div className="font-mono text-xs mb-2" data-testid="product-count">
               {filteredProducts.length} ITENS
             </div>
             <Select value={sortOption} onValueChange={setSortOption}>
@@ -148,8 +165,8 @@ export default function Shop() {
                   <div key={col.id} className="flex items-center space-x-3">
                     <Checkbox 
                       id={`col-${col.id}`} 
-                      checked={selectedCollections.includes(col.slug || String(col.id))}
-                      onCheckedChange={() => toggleCollection(col.slug || String(col.id))}
+                      checked={selectedCollections.includes(String(col.id))}
+                      onCheckedChange={() => toggleCollection(String(col.id))}
                       className="rounded-none"
                     />
                     <label
