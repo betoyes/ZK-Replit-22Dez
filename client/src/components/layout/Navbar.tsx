@@ -12,7 +12,7 @@ export function Navbar() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [location, setLocation] = useLocation();
-  const { wishlist, branding } = useProducts();
+  const { wishlist, branding, getCartCount } = useProducts();
   
   // Handle scroll effect
   useEffect(() => {
@@ -87,8 +87,8 @@ export function Navbar() {
               </Link>
 
               <Link href="/cart">
-                <button className="hover:opacity-70 transition-opacity font-mono text-sm flex items-center gap-2">
-                  SACOLA (0)
+                <button className="hover:opacity-70 transition-opacity font-mono text-sm flex items-center gap-2" data-testid="nav-cart-link">
+                  SACOLA ({getCartCount()})
                 </button>
               </Link>
 

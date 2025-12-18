@@ -26,7 +26,7 @@ export default function Product() {
   const urlParams = new URLSearchParams(searchString);
   const stoneFromUrl = urlParams.get('stone');
   
-  const { products, categories, collections } = useProducts();
+  const { products, categories, collections, addToCart } = useProducts();
   const { toast } = useToast();
   const [mainImage, setMainImage] = useState('');
   const [selectedVersion, setSelectedVersion] = useState(1);
@@ -132,9 +132,10 @@ export default function Product() {
   }
 
   const handleAddToCart = () => {
+    addToCart(product.id, 1, selectedStoneType);
     toast({
       title: "Adicionado à Sacola",
-      description: `${product.name} foi reservado.`,
+      description: `${product.name} foi adicionado à sua sacola.`,
     });
   };
 
@@ -371,7 +372,7 @@ export default function Product() {
               </div>
               
               {/* Ring Size Guide Button - Only for rings */}
-              {hasStoneVariations ? (
+              {productHasVariations ? (
                 <Dialog>
                   <DialogTrigger asChild>
                     <button className="w-full flex items-center justify-center gap-2 py-3 text-muted-foreground hover:text-foreground transition-colors font-mono text-xs uppercase tracking-widest border-b border-border hover:border-foreground">
@@ -466,8 +467,8 @@ export default function Product() {
                   <AccordionTrigger className="font-mono text-xs uppercase tracking-widest py-6 hover:no-underline">Especificações Técnicas</AccordionTrigger>
                   <AccordionContent className="text-muted-foreground font-light pb-6">
                     <ul className="space-y-2">
-                      {(hasStoneVariations ? getCurrentSpecs() : ((product.specs as string[]) || [])).length > 0 ? (
-                        (hasStoneVariations ? getCurrentSpecs() : ((product.specs as string[]) || [])).map((spec: string, idx: number) => (
+                      {(productHasVariations ? getCurrentSpecs() : ((product.specs as string[]) || [])).length > 0 ? (
+                        (productHasVariations ? getCurrentSpecs() : ((product.specs as string[]) || [])).map((spec: string, idx: number) => (
                           <li key={idx}>{spec}</li>
                         ))
                       ) : (

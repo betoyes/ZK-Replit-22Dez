@@ -2,6 +2,12 @@ import React, { createContext, useContext, useState, ReactNode, useEffect } from
 import { Product, products as initialProducts, Category, categories as initialCategories, Collection, collections as initialCollections, Branding, initialBranding, JournalPost, initialPosts } from '@/lib/mockData';
 import ringImage from '@assets/generated_images/diamond_ring_product_shot.png';
 
+export interface CartItem {
+  productId: number;
+  quantity: number;
+  stoneType?: string;
+}
+
 interface ProductContextType {
   products: Product[];
   categories: Category[];
@@ -11,6 +17,7 @@ interface ProductContextType {
   posts: JournalPost[];
   wishlist: number[];
   branding: Branding;
+  cart: CartItem[];
   
   addProduct: (product: Omit<Product, 'id'>) => Promise<void>;
   updateProduct: (id: number, product: Partial<Product>) => Promise<void>;
@@ -29,6 +36,12 @@ interface ProductContextType {
   updateOrder: (id: string, status: string) => void;
   toggleWishlist: (productId: number) => void;
   updateBranding: (newBranding: Partial<Branding>) => Promise<void>;
+  
+  addToCart: (productId: number, quantity?: number, stoneType?: string) => void;
+  removeFromCart: (productId: number, stoneType?: string) => void;
+  updateCartQuantity: (productId: number, quantity: number, stoneType?: string) => void;
+  clearCart: () => void;
+  getCartCount: () => number;
 }
 
 const ProductContext = createContext<ProductContextType | undefined>(undefined);
@@ -42,6 +55,7 @@ export function ProductProvider({ children }: { children: ReactNode }) {
   const [posts, setPosts] = useState<JournalPost[]>(initialPosts);
   const [wishlist, setWishlist] = useState<number[]>([]);
   const [branding, setBranding] = useState<Branding>(initialBranding);
+  const [cart, setCart] = useState<CartItem[]>([]);
 
   // Load data from server on mount
   useEffect(() => {
@@ -275,15 +289,59 @@ export function ProductProvider({ children }: { children: ReactNode }) {
     );
   };
 
+  // Cart
+  const addToCart = (productId: number, quantity: number = 1, stoneType?: string) => {
+    setCart(prev => {
+      const existingItem = prev.find(item => 
+        item.productId === productId && item.stoneType === stoneType
+      );
+      if (existingItem) {
+        return prev.map(item => 
+          item.productId === productId && item.stoneType === stoneType
+            ? { ...item, quantity: item.quantity + quantity }
+            : item
+        );
+      }
+      return [...prev, { productId, quantity, stoneType }];
+    });
+  };
+
+  const removeFromCart = (productId: number, stoneType?: string) => {
+    setCart(prev => prev.filter(item => 
+      !(item.productId === productId && item.stoneType === stoneType)
+    ));
+  };
+
+  const updateCartQuantity = (productId: number, quantity: number, stoneType?: string) => {
+    if (quantity <= 0) {
+      removeFromCart(productId, stoneType);
+      return;
+    }
+    setCart(prev => prev.map(item => 
+      item.productId === productId && item.stoneType === stoneType
+        ? { ...item, quantity }
+        : item
+    ));
+  };
+
+  const clearCart = () => {
+    setCart([]);
+  };
+
+  const getCartCount = () => {
+    return cart.reduce((total, item) => total + item.quantity, 0);
+  };
+
   return (
     <ProductContext.Provider value={{ 
-      products, categories, collections, orders, customers, posts, wishlist,
+      products, categories, collections, orders, customers, posts, wishlist, cart,
       addProduct, updateProduct, deleteProduct,
       addCategory, deleteCategory,
       addCollection, deleteCollection,
       addPost, deletePost, updatePost,
       updateOrder, toggleWishlist,
-      branding, updateBranding
+      branding, updateBranding,
+      addToCart, removeFromCart, updateCartQuantity, clearCart, getCartCount
     }}>
       {children}
     </ProductContext.Provider>
