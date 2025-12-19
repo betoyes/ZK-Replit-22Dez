@@ -1,6 +1,6 @@
 import {
   users, categories, collections, products, journalPosts, subscribers,
-  customers, orders, branding, emailVerificationTokens, passwordResetTokens,
+  customers, orders, branding, emailVerificationTokens, passwordResetTokens, auditLogs,
   type User, type InsertUser,
   type Category, type InsertCategory,
   type Collection, type InsertCollection,
@@ -12,6 +12,7 @@ import {
   type Branding, type InsertBranding,
   type EmailVerificationToken, type InsertEmailVerificationToken,
   type PasswordResetToken, type InsertPasswordResetToken,
+  type InsertAuditLog,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, isNotNull, asc, and, gt } from "drizzle-orm";
@@ -452,3 +453,24 @@ export class DatabaseStorage implements IStorage {
 }
 
 export const storage = new DatabaseStorage();
+
+export async function logAuditEvent(
+  userId: number | null,
+  action: string,
+  ipAddress: string | null,
+  userAgent: string | null,
+  details?: Record<string, any>
+): Promise<void> {
+  try {
+    await db.insert(auditLogs).values({
+      userId,
+      action,
+      ipAddress,
+      userAgent,
+      details: details ? JSON.stringify(details) : null,
+      createdAt: new Date().toISOString(),
+    });
+  } catch (err) {
+    console.error('Failed to log audit event:', err);
+  }
+}

@@ -1,20 +1,65 @@
-import type { Express } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
+import { storage, logAuditEvent } from "./storage";
 import session from "express-session";
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
 import { z } from "zod";
+import rateLimit from "express-rate-limit";
 import {
   insertUserSchema, insertCategorySchema, insertCollectionSchema,
   insertProductSchema, insertJournalPostSchema, insertSubscriberSchema,
   insertCustomerSchema, insertOrderSchema, insertBrandingSchema,
+  registerUserSchema, loginUserSchema,
   type User,
 } from "@shared/schema";
 import { sendPasswordResetEmail, sendAdminNotification } from "./email";
 import { validatePassword, isPasswordValid } from "../shared/passwordStrength";
+
+// Rate limiters for authentication routes
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5,
+  message: { message: "Muitas tentativas de login. Tente novamente em 15 minutos." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const registerLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 3,
+  message: { message: "Muitas tentativas de cadastro. Tente novamente em 1 hora." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const forgotPasswordLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 3,
+  message: { message: "Muitas solicitações de recuperação de senha. Tente novamente em 1 hora." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const resetPasswordLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5,
+  message: { message: "Muitas tentativas de redefinição de senha. Tente novamente em 15 minutos." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Helper to get client IP
+function getClientIp(req: Request): string | null {
+  return (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.ip || null;
+}
+
+// Helper to get user agent
+function getUserAgent(req: Request): string | null {
+  return req.headers['user-agent'] || null;
+}
 
 // Extend Express User type
 declare global {
@@ -66,6 +111,30 @@ export async function registerRoutes(
   app.use(passport.initialize());
   app.use(passport.session());
 
+  // CSRF token generation - generate on session creation
+  app.use((req: any, res: Response, next: NextFunction) => {
+    if (req.session && !req.session.csrfToken) {
+      req.session.csrfToken = crypto.randomBytes(32).toString('hex');
+    }
+    next();
+  });
+
+  // CSRF validation middleware for auth POST/PATCH/DELETE routes
+  const csrfProtection = (req: Request, res: Response, next: NextFunction) => {
+    const session = (req as any).session;
+    const csrfToken = req.headers['x-csrf-token'];
+    
+    if (!session?.csrfToken) {
+      return res.status(403).json({ message: "Sessão inválida. Atualize a página e tente novamente." });
+    }
+    
+    if (!csrfToken || csrfToken !== session.csrfToken) {
+      return res.status(403).json({ message: "Token CSRF inválido. Atualize a página e tente novamente." });
+    }
+    
+    next();
+  };
+
   passport.use(
     new LocalStrategy(async (username, password, done) => {
       try {
@@ -104,14 +173,31 @@ export async function registerRoutes(
 
   // ============ AUTH ROUTES ============
   
+  // CSRF Token endpoint
+  app.get("/api/auth/csrf-token", (req: any, res: Response) => {
+    if (!req.session?.csrfToken) {
+      req.session.csrfToken = crypto.randomBytes(32).toString('hex');
+    }
+    res.json({ csrfToken: req.session.csrfToken });
+  });
+
   // Customer registration endpoint
-  app.post("/api/auth/register", async (req, res, next) => {
+  app.post("/api/auth/register", registerLimiter, csrfProtection, async (req: Request, res: Response, next: NextFunction) => {
+    const clientIp = getClientIp(req);
+    const userAgent = getUserAgent(req);
+    
     try {
-      const { username, password } = req.body;
-      
-      if (!username || !password) {
-        return res.status(400).json({ message: "Email e senha são obrigatórios" });
+      // Validate input with Zod schema
+      const validationResult = registerUserSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        const errors = validationResult.error.errors.map(e => e.message);
+        return res.status(400).json({ 
+          message: "Erro de validação",
+          errors: errors
+        });
       }
+      
+      const { username, email, password, consentTerms, consentPrivacy, consentMarketing } = validationResult.data;
       
       const passwordValidation = validatePassword(password);
       if (!isPasswordValid(password)) {
@@ -122,7 +208,7 @@ export async function registerRoutes(
         });
       }
       
-      const existingUser = await storage.getUserByUsername(username);
+      const existingUser = await storage.getUserByUsername(email);
       if (existingUser) {
         return res.status(400).json({ message: "Este email já está em uso" });
       }
@@ -130,16 +216,23 @@ export async function registerRoutes(
       const hashedPassword = await bcrypt.hash(password, 10);
       
       const user = await storage.createUser({
-        username,
+        username: email,
         password: hashedPassword,
         role: 'customer',
+        email,
+        consentTerms,
+        consentPrivacy,
+        consentMarketing: consentMarketing || false,
       });
+
+      // Log audit event
+      await logAuditEvent(user.id, 'register', clientIp, userAgent, { email });
 
       // Auto-subscribe as lead (registered but no purchase yet)
       try {
         await storage.createOrUpdateSubscriber(
-          username.toLowerCase(),
-          username.split('@')[0],
+          email.toLowerCase(),
+          username || email.split('@')[0],
           'lead'
         );
       } catch (subErr) {
@@ -148,8 +241,8 @@ export async function registerRoutes(
       
       // Send admin notification for new lead
       sendAdminNotification('lead', { 
-        email: username, 
-        name: username.split('@')[0] 
+        email, 
+        name: username || email.split('@')[0] 
       }).catch(err => console.error('Failed to send lead notification:', err));
       
       res.status(201).json({
@@ -165,12 +258,15 @@ export async function registerRoutes(
 
 
   // Request password reset
-  app.post("/api/auth/forgot-password", async (req, res, next) => {
+  app.post("/api/auth/forgot-password", forgotPasswordLimiter, csrfProtection, async (req: Request, res: Response, next: NextFunction) => {
+    const clientIp = getClientIp(req);
+    const userAgent = getUserAgent(req);
+    
     try {
       const { email } = req.body;
       
-      if (!email) {
-        return res.status(400).json({ message: "Email é obrigatório" });
+      if (!email || typeof email !== 'string' || !email.includes('@')) {
+        return res.status(400).json({ message: "Email válido é obrigatório" });
       }
       
       const user = await storage.getUserByUsername(email);
@@ -178,6 +274,9 @@ export async function registerRoutes(
         // Return success even if user doesn't exist (security best practice)
         return res.json({ message: "Se o email existir em nossa base, você receberá um link de recuperação." });
       }
+      
+      // Log audit event
+      await logAuditEvent(user.id, 'password_reset_request', clientIp, userAgent, { email });
       
       // Delete old reset tokens
       await storage.deletePasswordResetTokensByUserId(user.id);
@@ -232,7 +331,10 @@ export async function registerRoutes(
   });
 
   // Reset password
-  app.post("/api/auth/reset-password", async (req, res, next) => {
+  app.post("/api/auth/reset-password", resetPasswordLimiter, csrfProtection, async (req: Request, res: Response, next: NextFunction) => {
+    const clientIp = getClientIp(req);
+    const userAgent = getUserAgent(req);
+    
     try {
       const { token, password } = req.body;
       
@@ -266,6 +368,9 @@ export async function registerRoutes(
       // Mark token as used
       await storage.markPasswordResetTokenUsed(tokenData.id);
       
+      // Log audit event
+      await logAuditEvent(tokenData.userId, 'password_reset_complete', clientIp, userAgent);
+      
       res.json({ message: "Senha alterada com sucesso! Você já pode fazer login." });
     } catch (err) {
       next(err);
@@ -273,19 +378,49 @@ export async function registerRoutes(
   });
 
   // Login
-  app.post("/api/auth/login", async (req, res, next) => {
+  app.post("/api/auth/login", loginLimiter, csrfProtection, async (req: Request, res: Response, next: NextFunction) => {
+    const clientIp = getClientIp(req);
+    const userAgent = getUserAgent(req);
+    
+    // Validate input with Zod schema
+    const validationResult = loginUserSchema.safeParse({
+      usernameOrEmail: req.body.username || req.body.usernameOrEmail,
+      password: req.body.password
+    });
+    
+    if (!validationResult.success) {
+      const errors = validationResult.error.errors.map(e => e.message);
+      return res.status(400).json({ 
+        message: "Erro de validação",
+        errors: errors
+      });
+    }
+    
     passport.authenticate("local", async (err: any, user: Express.User, info: any) => {
       if (err) {
         return next(err);
       }
       if (!user) {
+        // Log failed login attempt
+        const attemptedUser = await storage.getUserByUsername(req.body.username);
+        await logAuditEvent(
+          attemptedUser?.id || null,
+          'login_failed',
+          clientIp,
+          userAgent,
+          { username: req.body.username, reason: info?.message }
+        );
         return res.status(401).json({ message: info?.message || "Credenciais inválidas" });
       }
       
-      req.logIn(user, (err) => {
+      req.logIn(user, async (err) => {
         if (err) {
           return next(err);
         }
+        
+        // Log successful login
+        await logAuditEvent(user.id, 'login', clientIp, userAgent);
+        
         return res.json({
           id: user.id,
           username: user.username,
@@ -296,8 +431,16 @@ export async function registerRoutes(
   });
 
   // Logout
-  app.post("/api/auth/logout", (req, res) => {
-    req.logout(() => {
+  app.post("/api/auth/logout", csrfProtection, (req: Request, res: Response) => {
+    const clientIp = getClientIp(req);
+    const userAgent = getUserAgent(req);
+    const userId = (req as any).user?.id;
+    
+    req.logout(async () => {
+      // Log logout event
+      if (userId) {
+        await logAuditEvent(userId, 'logout', clientIp, userAgent);
+      }
       res.json({ message: "Logout realizado com sucesso" });
     });
   });
