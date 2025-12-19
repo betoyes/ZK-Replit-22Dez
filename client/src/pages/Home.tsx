@@ -1,7 +1,7 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'wouter';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { ArrowDown, ArrowUpRight, Play, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowDown, ArrowUpRight, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useProducts } from '@/context/ProductContext';
@@ -9,8 +9,6 @@ import StoneSelector, { hasStoneVariations, getStonePrice } from '@/components/S
 import heroImage from '@assets/generated_images/luxury_jewelry_hero_image_with_model.png';
 import necklaceImage from '@assets/generated_images/gold_necklace_product_shot.png';
 import campaignVideo from '@assets/generated_videos/b&w_jewelry_fashion_b-roll.mp4';
-import useEmblaCarousel from 'embla-carousel-react';
-import Autoplay from 'embla-carousel-autoplay';
 import { useToast } from '@/hooks/use-toast';
 
 import { testimonials } from '@/lib/mockData';
@@ -68,30 +66,6 @@ export default function Home() {
     }
   };
   
-  // Autoplay plugin configuration
-  const autoplayPlugin = Autoplay({
-    delay: 3000,
-    stopOnInteraction: false,
-    stopOnMouseEnter: true,
-    playOnInit: true,
-  });
-
-  // Carousel setup with autoplay
-  const [emblaRef, emblaApi] = useEmblaCarousel({ 
-    align: 'start',
-    containScroll: false,
-    dragFree: true,
-    loop: true,
-  }, [autoplayPlugin]);
-
-  const scrollPrev = useCallback(() => {
-    if (emblaApi) emblaApi.scrollPrev();
-  }, [emblaApi]);
-
-  const scrollNext = useCallback(() => {
-    if (emblaApi) emblaApi.scrollNext();
-  }, [emblaApi]);
-
   // Filter and Sort Bestsellers
   const bestsellers = (Array.isArray(products) ? products : [])
     .filter(p => p.bestsellerOrder !== undefined && p.bestsellerOrder > 0)
@@ -238,33 +212,25 @@ export default function Home() {
           <span>Luxo</span>
         </motion.div>
       </div>
-      {/* Horizontal Product Carousel Section */}
-      <section className="py-32 pl-4 md:pl-12 overflow-hidden">
-        <div className="flex justify-between items-end pr-12 mb-16">
+      {/* Horizontal Product Carousel Section - Continuous Animation */}
+      <section className="py-32 overflow-hidden">
+        <div className="flex justify-between items-end px-4 md:px-12 mb-16">
           <h2 className="font-display text-4xl font-medium">Bestsellers</h2>
-          <div className="flex items-center gap-4">
-            <button 
-              onClick={scrollPrev}
-              className="h-10 w-10 rounded-full border border-black flex items-center justify-center hover:bg-black hover:text-white transition-colors"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-            <button 
-              onClick={scrollNext}
-              className="h-10 w-10 rounded-full border border-black flex items-center justify-center hover:bg-black hover:text-white transition-colors"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </button>
-          </div>
+          <Link href="/shop" className="font-mono text-xs uppercase tracking-widest hover:underline underline-offset-4">Ver Toda a Coleção</Link>
         </div>
 
-        <div className="overflow-hidden cursor-grab active:cursor-grabbing" ref={emblaRef}>
-          <div className="flex pr-12">
-            {(bestsellers.length > 0 ? bestsellers : (Array.isArray(products) ? products : []).slice(0, 8)).map((product, idx) => {
+        <div className="overflow-hidden">
+          <motion.div 
+            animate={{ x: ["-50%", "0%"] }}
+            transition={{ repeat: Infinity, duration: 40, ease: "linear" }}
+            className="flex"
+          >
+            {/* Duplicate products for seamless loop */}
+            {[...(bestsellers.length > 0 ? bestsellers : (Array.isArray(products) ? products : []).slice(0, 8)), ...(bestsellers.length > 0 ? bestsellers : (Array.isArray(products) ? products : []).slice(0, 8))].map((product, idx) => {
               const stoneId = selectedStoneTypes[product.id] || 'main';
               const productUrl = stoneId !== 'main' ? `/product/${product.id}?stone=${stoneId}` : `/product/${product.id}`;
               return (
-              <div key={product.id} className="shrink-0 w-[300px] md:w-[400px] group select-none mr-10">
+              <div key={`${product.id}-${idx}`} className="shrink-0 w-[300px] md:w-[400px] group select-none mx-5">
                 <Link href={productUrl} className="cursor-pointer">
                   <div className="aspect-[3/4] bg-secondary overflow-hidden mb-6 relative">
                     <img 
@@ -307,11 +273,7 @@ export default function Home() {
               </div>
             );
             })}
-          </div>
-        </div>
-        
-        <div className="mt-12 pr-12 flex justify-center md:justify-end">
-           <Link href="/shop" className="font-mono text-xs uppercase tracking-widest hover:underline underline-offset-4">Ver Toda a Coleção</Link>
+          </motion.div>
         </div>
       </section>
       {/* Impact Phrase & Testimonials */}
