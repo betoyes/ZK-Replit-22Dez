@@ -6,7 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { motion } from 'framer-motion';
-import { ArrowRight, Heart, ChevronDown } from 'lucide-react';
+import { ArrowRight, Heart, ChevronDown, Sparkles } from 'lucide-react';
 import StoneSelector, { hasStoneVariations, getStonePrice } from '@/components/StoneSelector';
 
 export default function Shop() {
@@ -22,6 +22,10 @@ export default function Shop() {
   const [priceRange, setPriceRange] = useState([0, 50000]);
   const [sortOption, setSortOption] = useState('newest');
   const [selectedStoneTypes, setSelectedStoneTypes] = useState<Record<number, string>>({});
+  const [showNoivasSection, setShowNoivasSection] = useState(true);
+  
+  // Check if "Noivas" filter is active
+  const isNoivasActive = selectedCategories.includes('noivas');
 
   // Get price based on selected stone type
   const getProductPrice = (product: any) => {
@@ -131,6 +135,101 @@ export default function Shop() {
           </div>
         </div>
 
+        {/* NOIVAS Section Banner - Layout Preview */}
+        {showNoivasSection && !isNoivasActive && (
+          <motion.div 
+            className="mb-12 relative overflow-hidden"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <div className="bg-gradient-to-r from-rose-50 via-white to-rose-50 border border-rose-200/50 p-8 md:p-12">
+              <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+                <div className="flex items-center gap-6">
+                  <div className="w-16 h-16 flex items-center justify-center bg-rose-100/50 rounded-full">
+                    <Sparkles className="w-8 h-8 text-rose-400" />
+                  </div>
+                  <div>
+                    <h2 className="font-display text-3xl md:text-4xl font-bold tracking-tighter mb-2">
+                      Coleção Noivas
+                    </h2>
+                    <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
+                      Alianças e joias exclusivas para o seu grande dia
+                    </p>
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <Button 
+                    variant="outline" 
+                    className="rounded-none border-rose-300 hover:bg-rose-50"
+                    onClick={() => {
+                      toggleCategory('noivas');
+                      setShowNoivasSection(false);
+                    }}
+                    data-testid="button-filter-noivas"
+                  >
+                    Ver Produtos para Noivas
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                  <Link href="/noivas">
+                    <Button className="rounded-none bg-black hover:bg-black/90" data-testid="button-noivas-page">
+                      Página Noivas
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </div>
+            <button 
+              onClick={() => setShowNoivasSection(false)} 
+              className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors"
+              aria-label="Fechar"
+            >
+              <span className="font-mono text-xs">×</span>
+            </button>
+          </motion.div>
+        )}
+
+        {/* Active Noivas Filter Banner */}
+        {isNoivasActive && (
+          <motion.div 
+            className="mb-12"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <div className="bg-gradient-to-r from-rose-100 via-rose-50 to-rose-100 border border-rose-200 p-6 md:p-8">
+              <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+                <div className="flex items-center gap-4">
+                  <Sparkles className="w-6 h-6 text-rose-500" />
+                  <div>
+                    <h3 className="font-display text-2xl font-bold tracking-tight">
+                      Exibindo: Produtos para Noivas
+                    </h3>
+                    <p className="font-mono text-xs text-muted-foreground uppercase tracking-widest">
+                      Coleção especial com peças exclusivas para casamentos
+                    </p>
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <Link href="/noivas">
+                    <Button variant="outline" className="rounded-none border-rose-300 hover:bg-rose-50">
+                      Ver Página Noivas
+                    </Button>
+                  </Link>
+                  <Button 
+                    variant="ghost" 
+                    className="rounded-none"
+                    onClick={() => {
+                      toggleCategory('noivas');
+                      setShowNoivasSection(true);
+                    }}
+                  >
+                    Limpar Filtro
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
         <div className="flex flex-col lg:flex-row gap-16">
           {/* Sidebar Filters */}
           <div className="w-full lg:w-64 space-y-12 sticky top-32 h-fit bg-background z-10">
@@ -138,6 +237,29 @@ export default function Shop() {
             <div>
               <h3 className="font-mono text-xs uppercase tracking-widest mb-6 text-muted-foreground">Categorias</h3>
               <div className="space-y-3">
+                {/* Special Noivas Category - Layout Preview */}
+                <div className={`flex items-center space-x-3 p-2 -mx-2 rounded transition-colors ${isNoivasActive ? 'bg-rose-100' : 'hover:bg-rose-50'}`}>
+                  <Checkbox 
+                    id="cat-noivas"
+                    checked={isNoivasActive}
+                    onCheckedChange={() => {
+                      toggleCategory('noivas');
+                      setShowNoivasSection(!isNoivasActive);
+                    }}
+                    className="rounded-none border-rose-300 data-[state=checked]:bg-rose-500 data-[state=checked]:border-rose-500"
+                  />
+                  <label
+                    htmlFor="cat-noivas"
+                    className="text-sm font-medium leading-none cursor-pointer flex items-center gap-2"
+                  >
+                    <Sparkles className="w-4 h-4 text-rose-400" />
+                    Noivas
+                  </label>
+                </div>
+                
+                {/* Separator */}
+                <div className="border-b border-border my-2" />
+                
                 {categories.map(cat => (
                   <div key={cat.id} className="flex items-center space-x-3">
                     <Checkbox 
