@@ -788,10 +788,22 @@ export async function registerRoutes(
 
   // ============ PRODUCTS ROUTES ============
   
+  // Helper to strip base64 images and replace with API URLs
+  const stripBase64Images = (products: any[]) => {
+    return products.map(p => ({
+      ...p,
+      image: p.image?.startsWith('data:') ? `/api/products/${p.id}/image` : p.image,
+      imageColor: p.imageColor?.startsWith('data:') ? `/api/products/${p.id}/image-color` : p.imageColor,
+      version1: p.version1?.startsWith('data:') ? `/api/products/${p.id}/version1` : p.version1,
+      version2: p.version2?.startsWith('data:') ? `/api/products/${p.id}/version2` : p.version2,
+      version3: p.version3?.startsWith('data:') ? `/api/products/${p.id}/version3` : p.version3,
+    }));
+  };
+
   app.get("/api/products", async (req, res, next) => {
     try {
       res.set('Cache-Control', 'public, max-age=30, stale-while-revalidate=120');
-      const { category, collection, bestsellers, new: isNew } = req.query;
+      const { category, collection, bestsellers, new: isNew, full } = req.query;
       
       let products: any[] = [];
       if (bestsellers === 'true') {
@@ -816,7 +828,98 @@ export async function registerRoutes(
         products = await storage.getProducts();
       }
       
+      // Strip base64 images to reduce payload size (unless full=true is requested)
+      if (full !== 'true') {
+        products = stripBase64Images(products);
+      }
+      
       res.json(products);
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  // Serve product images separately
+  app.get("/api/products/:id/image", async (req, res, next) => {
+    try {
+      res.set('Cache-Control', 'public, max-age=3600, stale-while-revalidate=86400');
+      const id = parseInt(req.params.id);
+      const product = await storage.getProductById(id);
+      if (!product || !product.image) {
+        return res.status(404).json({ message: "Imagem não encontrada" });
+      }
+      
+      // If it's base64, decode and send as image
+      if (product.image.startsWith('data:')) {
+        const matches = product.image.match(/^data:(.+);base64,(.+)$/);
+        if (matches) {
+          const mimeType = matches[1];
+          const base64Data = matches[2];
+          const buffer = Buffer.from(base64Data, 'base64');
+          res.set('Content-Type', mimeType);
+          return res.send(buffer);
+        }
+      }
+      
+      // If it's a URL, redirect to it
+      res.redirect(product.image);
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  app.get("/api/products/:id/image-color", async (req, res, next) => {
+    try {
+      res.set('Cache-Control', 'public, max-age=3600, stale-while-revalidate=86400');
+      const id = parseInt(req.params.id);
+      const product = await storage.getProductById(id);
+      if (!product || !product.imageColor) {
+        return res.status(404).json({ message: "Imagem não encontrada" });
+      }
+      
+      // If it's base64, decode and send as image
+      if (product.imageColor.startsWith('data:')) {
+        const matches = product.imageColor.match(/^data:(.+);base64,(.+)$/);
+        if (matches) {
+          const mimeType = matches[1];
+          const base64Data = matches[2];
+          const buffer = Buffer.from(base64Data, 'base64');
+          res.set('Content-Type', mimeType);
+          return res.send(buffer);
+        }
+      }
+      
+      // If it's a URL, redirect to it
+      res.redirect(product.imageColor);
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  // Generic endpoint for version images
+  app.get("/api/products/:id/:field(version1|version2|version3)", async (req, res, next) => {
+    try {
+      res.set('Cache-Control', 'public, max-age=3600, stale-while-revalidate=86400');
+      const id = parseInt(req.params.id);
+      const field = req.params.field as 'version1' | 'version2' | 'version3';
+      const product = await storage.getProductById(id);
+      if (!product || !product[field]) {
+        return res.status(404).json({ message: "Imagem não encontrada" });
+      }
+      
+      const imageData = product[field];
+      if (imageData.startsWith('data:')) {
+        const matches = imageData.match(/^data:(.+);base64,(.+)$/);
+        if (matches) {
+          const mimeType = matches[1];
+          const base64Data = matches[2];
+          const buffer = Buffer.from(base64Data, 'base64');
+          res.set('Content-Type', mimeType);
+          return res.send(buffer);
+        }
+      }
+      
+      res.redirect(imageData);
     } catch (err) {
       next(err);
     }
