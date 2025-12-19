@@ -1730,19 +1730,23 @@ export default function Dashboard() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {(Array.isArray(categories) ? categories : []).map(cat => (
-                <div key={cat.id} className="border border-border p-6 bg-card hover:border-black transition-all group relative">
-                  <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Button onClick={() => handleDeleteCategory(cat.id)} variant="ghost" size="icon" className="h-8 w-8 hover:text-destructive hover:bg-transparent"><Trash className="h-4 w-4" /></Button>
+              {(Array.isArray(categories) ? categories : []).map(cat => {
+                const productCount = (Array.isArray(products) ? products : []).filter(p => p.categoryId === cat.id).length;
+                return (
+                  <div key={cat.id} className="border border-border p-6 bg-card hover:border-black transition-all group relative">
+                    <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button onClick={() => handleDeleteCategory(cat.id)} variant="ghost" size="icon" className="h-8 w-8 hover:text-destructive hover:bg-transparent"><Trash className="h-4 w-4" /></Button>
+                    </div>
+                    <Tags className="h-8 w-8 mb-4 text-muted-foreground" />
+                    <h3 className="font-display text-xl mb-2 capitalize">{cat.name}</h3>
+                    <p className="font-mono text-xs text-muted-foreground">{cat.description}</p>
+                    <div className="mt-4 pt-4 border-t border-border font-mono text-[10px] uppercase tracking-widest text-muted-foreground flex justify-between">
+                      <span>ID: {cat.id}</span>
+                      <span className="text-foreground">{productCount} {productCount === 1 ? 'joia' : 'joias'}</span>
+                    </div>
                   </div>
-                  <Tags className="h-8 w-8 mb-4 text-muted-foreground" />
-                  <h3 className="font-display text-xl mb-2 capitalize">{cat.name}</h3>
-                  <p className="font-mono text-xs text-muted-foreground">{cat.description}</p>
-                  <div className="mt-4 pt-4 border-t border-border font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                    ID: {cat.id}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </TabsContent>
 
@@ -1812,25 +1816,31 @@ export default function Dashboard() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {(Array.isArray(collections) ? collections : []).map(col => (
-                <div key={col.id} className="border border-border bg-card group relative overflow-hidden">
-                   <div className="h-48 bg-secondary/30 overflow-hidden">
-                     {col.image ? (
-                       <img src={col.image} alt={col.name} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500" />
-                     ) : (
-                       <div className="w-full h-full flex items-center justify-center text-muted-foreground font-mono text-xs">Sem imagem</div>
-                     )}
-                   </div>
-                   <div className="p-6 relative z-10 bg-card">
-                      <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
-                        <Button onClick={() => openEditCollection(col)} variant="ghost" size="icon" className="h-8 w-8 hover:text-primary hover:bg-transparent"><Pencil className="h-4 w-4" /></Button>
-                        <Button onClick={() => handleDeleteCollection(col.id)} variant="ghost" size="icon" className="h-8 w-8 hover:text-destructive hover:bg-transparent"><Trash className="h-4 w-4" /></Button>
-                      </div>
-                      <h3 className="font-display text-xl mb-2">{col.name}</h3>
-                      <p className="font-mono text-xs text-muted-foreground">{col.description}</p>
-                   </div>
-                </div>
-              ))}
+              {(Array.isArray(collections) ? collections : []).map(col => {
+                const productCount = (Array.isArray(products) ? products : []).filter(p => p.collectionId === col.id).length;
+                return (
+                  <div key={col.id} className="border border-border bg-card group relative overflow-hidden">
+                     <div className="h-48 bg-secondary/30 overflow-hidden relative">
+                       {col.image ? (
+                         <img src={col.image} alt={col.name} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500" />
+                       ) : (
+                         <div className="w-full h-full flex items-center justify-center text-muted-foreground font-mono text-xs">Sem imagem</div>
+                       )}
+                       <div className="absolute bottom-2 right-2 bg-black/70 text-white px-2 py-1 font-mono text-[10px] uppercase tracking-widest">
+                         {productCount} {productCount === 1 ? 'joia' : 'joias'}
+                       </div>
+                     </div>
+                     <div className="p-6 relative z-10 bg-card">
+                        <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                          <Button onClick={() => openEditCollection(col)} variant="ghost" size="icon" className="h-8 w-8 hover:text-primary hover:bg-transparent"><Pencil className="h-4 w-4" /></Button>
+                          <Button onClick={() => handleDeleteCollection(col.id)} variant="ghost" size="icon" className="h-8 w-8 hover:text-destructive hover:bg-transparent"><Trash className="h-4 w-4" /></Button>
+                        </div>
+                        <h3 className="font-display text-xl mb-2">{col.name}</h3>
+                        <p className="font-mono text-xs text-muted-foreground">{col.description}</p>
+                     </div>
+                  </div>
+                );
+              })}
             </div>
 
             {/* Edit Collection Dialog */}
