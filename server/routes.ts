@@ -1173,5 +1173,387 @@ export async function registerRoutes(
     }
   });
 
+  // ============ LGPD COMPLIANCE ROUTES ============
+
+  // Rate limiter for data export requests (1 per day)
+  const dataExportLimiter = rateLimit({
+    windowMs: 24 * 60 * 60 * 1000, // 24 hours
+    max: 1,
+    message: { message: "Você já solicitou uma exportação de dados hoje. Tente novamente amanhã." },
+    standardHeaders: true,
+    legacyHeaders: false,
+  });
+
+  // GET /api/lgpd/consent-history - Returns user's consent data and audit history
+  app.get("/api/lgpd/consent-history", requireAuth, async (req: any, res: Response, next: NextFunction) => {
+    try {
+      const userId = req.user.id;
+      const { user, auditLogs } = await storage.getUserConsentHistory(userId);
+      
+      res.json({
+        consentData: {
+          consentMarketing: user.consentMarketing,
+          consentTerms: user.consentTerms,
+          consentPrivacy: user.consentPrivacy,
+          consentAt: user.consentAt,
+          createdAt: user.createdAt,
+        },
+        auditHistory: auditLogs.map(log => ({
+          action: log.action,
+          details: log.details ? JSON.parse(log.details) : null,
+          createdAt: log.createdAt,
+        })),
+      });
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  // PATCH /api/lgpd/consent - Updates consent preferences
+  app.patch("/api/lgpd/consent", requireAuth, csrfProtection, async (req: any, res: Response, next: NextFunction) => {
+    const clientIp = getClientIp(req);
+    const userAgent = getUserAgent(req);
+    
+    try {
+      const userId = req.user.id;
+      const { consentMarketing, consentTerms, consentPrivacy } = req.body;
+      
+      // Get current values for audit log
+      const currentUser = await storage.getUser(userId);
+      if (!currentUser) {
+        return res.status(404).json({ message: "Usuário não encontrado" });
+      }
+      
+      const oldValues = {
+        consentMarketing: currentUser.consentMarketing,
+        consentTerms: currentUser.consentTerms,
+        consentPrivacy: currentUser.consentPrivacy,
+      };
+      
+      const newValues: { consentMarketing?: boolean; consentTerms?: boolean; consentPrivacy?: boolean } = {};
+      if (typeof consentMarketing === 'boolean') newValues.consentMarketing = consentMarketing;
+      if (typeof consentTerms === 'boolean') newValues.consentTerms = consentTerms;
+      if (typeof consentPrivacy === 'boolean') newValues.consentPrivacy = consentPrivacy;
+      
+      if (Object.keys(newValues).length === 0) {
+        return res.status(400).json({ message: "Nenhuma preferência de consentimento fornecida" });
+      }
+      
+      const updatedUser = await storage.updateUserConsent(userId, newValues);
+      
+      // Log audit event
+      await logAuditEvent(userId, 'consent_update', clientIp, userAgent, {
+        oldValues,
+        newValues,
+      });
+      
+      res.json({
+        message: "Preferências de consentimento atualizadas com sucesso",
+        consentData: {
+          consentMarketing: updatedUser.consentMarketing,
+          consentTerms: updatedUser.consentTerms,
+          consentPrivacy: updatedUser.consentPrivacy,
+          consentAt: updatedUser.consentAt,
+        },
+      });
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  // POST /api/lgpd/data-export - Creates a data export request
+  app.post("/api/lgpd/data-export", requireAuth, csrfProtection, async (req: any, res: Response, next: NextFunction) => {
+    const clientIp = getClientIp(req);
+    const userAgent = getUserAgent(req);
+    
+    try {
+      const userId = req.user.id;
+      
+      // Check for recent request (rate limiting at storage level)
+      const recentRequest = await storage.getRecentDataExportRequest(userId, 24);
+      if (recentRequest) {
+        return res.status(429).json({ 
+          message: "Você já solicitou uma exportação de dados nas últimas 24 horas. Tente novamente mais tarde.",
+          existingRequestId: recentRequest.id,
+          status: recentRequest.status,
+        });
+      }
+      
+      const request = await storage.createDataExportRequest(userId);
+      
+      // Log audit event
+      await logAuditEvent(userId, 'data_export_request', clientIp, userAgent, {
+        requestId: request.id,
+      });
+      
+      res.status(201).json({
+        message: "Solicitação de exportação de dados criada com sucesso. Você pode gerar o arquivo agora.",
+        requestId: request.id,
+        status: request.status,
+      });
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  // GET /api/lgpd/data-export/:requestId - Returns status of data export request
+  app.get("/api/lgpd/data-export/:requestId", requireAuth, async (req: any, res: Response, next: NextFunction) => {
+    try {
+      const userId = req.user.id;
+      const requestId = parseInt(req.params.requestId);
+      
+      if (isNaN(requestId)) {
+        return res.status(400).json({ message: "ID de solicitação inválido" });
+      }
+      
+      const request = await storage.getDataExportRequest(requestId, userId);
+      
+      if (!request) {
+        return res.status(404).json({ message: "Solicitação de exportação não encontrada" });
+      }
+      
+      const response: any = {
+        id: request.id,
+        status: request.status,
+        requestedAt: request.requestedAt,
+        completedAt: request.completedAt,
+      };
+      
+      // Include download URL only if completed and not expired
+      if (request.status === 'completed' && request.downloadUrl && request.expiresAt) {
+        if (new Date(request.expiresAt) > new Date()) {
+          response.downloadUrl = request.downloadUrl;
+          response.expiresAt = request.expiresAt;
+        } else {
+          response.message = "O link de download expirou. Solicite uma nova exportação.";
+        }
+      }
+      
+      res.json(response);
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  // POST /api/lgpd/data-export/:requestId/generate - Generates the data export file
+  app.post("/api/lgpd/data-export/:requestId/generate", requireAuth, csrfProtection, async (req: any, res: Response, next: NextFunction) => {
+    const clientIp = getClientIp(req);
+    const userAgent = getUserAgent(req);
+    
+    try {
+      const userId = req.user.id;
+      const requestId = parseInt(req.params.requestId);
+      
+      if (isNaN(requestId)) {
+        return res.status(400).json({ message: "ID de solicitação inválido" });
+      }
+      
+      const request = await storage.getDataExportRequest(requestId, userId);
+      
+      if (!request) {
+        return res.status(404).json({ message: "Solicitação de exportação não encontrada" });
+      }
+      
+      if (request.status === 'completed') {
+        return res.status(400).json({ message: "Esta exportação já foi gerada" });
+      }
+      
+      // Update status to processing
+      await storage.updateDataExportRequest(requestId, { status: 'processing' });
+      
+      // Collect all user data
+      const allData = await storage.getAllUserData(userId);
+      
+      // Create export package
+      const exportData = {
+        exportedAt: new Date().toISOString(),
+        dataSubject: {
+          id: allData.user.id,
+          email: allData.user.email,
+          username: allData.user.username,
+          createdAt: allData.user.createdAt,
+          emailVerified: allData.user.emailVerified,
+          emailVerifiedAt: allData.user.emailVerifiedAt,
+          phone: allData.user.phone,
+          role: allData.user.role,
+        },
+        consents: {
+          marketing: allData.user.consentMarketing,
+          terms: allData.user.consentTerms,
+          privacy: allData.user.consentPrivacy,
+          consentAt: allData.user.consentAt,
+        },
+        orders: allData.orders,
+        subscription: allData.subscriber,
+        auditLog: allData.auditLogs.map(log => ({
+          action: log.action,
+          createdAt: log.createdAt,
+          ipAddress: log.ipAddress,
+        })),
+        previousExportRequests: allData.dataExportRequests.filter(r => r.id !== requestId).map(r => ({
+          id: r.id,
+          status: r.status,
+          requestedAt: r.requestedAt,
+        })),
+      };
+      
+      // Create base64 encoded JSON as download URL
+      const jsonContent = JSON.stringify(exportData, null, 2);
+      const base64Content = Buffer.from(jsonContent).toString('base64');
+      const downloadUrl = `data:application/json;base64,${base64Content}`;
+      
+      // Set expiration to 24 hours from now
+      const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+      
+      // Update request with completed status
+      const updatedRequest = await storage.updateDataExportRequest(requestId, {
+        status: 'completed',
+        completedAt: new Date().toISOString(),
+        downloadUrl,
+        expiresAt,
+      });
+      
+      // Log audit event
+      await logAuditEvent(userId, 'data_export_generated', clientIp, userAgent, {
+        requestId,
+      });
+      
+      res.json({
+        message: "Exportação de dados gerada com sucesso",
+        id: requestId,
+        status: 'completed',
+        downloadUrl,
+        expiresAt,
+      });
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  // DELETE /api/lgpd/account - Deletes or anonymizes account
+  app.delete("/api/lgpd/account", requireAuth, csrfProtection, async (req: any, res: Response, next: NextFunction) => {
+    const clientIp = getClientIp(req);
+    const userAgent = getUserAgent(req);
+    
+    try {
+      const userId = req.user.id;
+      const { password, mode } = req.body;
+      
+      if (!password) {
+        return res.status(400).json({ message: "Senha é obrigatória para confirmar esta ação" });
+      }
+      
+      if (!mode || !['anonymize', 'delete'].includes(mode)) {
+        return res.status(400).json({ message: "Modo inválido. Use 'anonymize' ou 'delete'" });
+      }
+      
+      // Verify password
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "Usuário não encontrado" });
+      }
+      
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+      if (!isPasswordValid) {
+        return res.status(401).json({ message: "Senha incorreta" });
+      }
+      
+      let result;
+      let auditAction;
+      let responseMessage;
+      
+      if (mode === 'anonymize') {
+        result = await storage.anonymizeUser(userId);
+        auditAction = 'account_anonymize';
+        responseMessage = "Sua conta foi anonimizada. Todos os seus dados pessoais foram removidos.";
+      } else {
+        result = await storage.softDeleteUser(userId);
+        auditAction = 'account_delete';
+        responseMessage = "Sua conta foi marcada para exclusão. Os dados serão removidos permanentemente em 30 dias.";
+      }
+      
+      // Log audit event before invalidating session
+      await logAuditEvent(userId, auditAction, clientIp, userAgent, {
+        mode,
+        email: user.email,
+      });
+      
+      // Invalidate session
+      req.logout(() => {
+        req.session?.destroy(() => {});
+      });
+      
+      res.json({
+        message: responseMessage,
+        mode,
+        processedAt: new Date().toISOString(),
+      });
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  // GET /api/lgpd/data - Returns all personal data for transparency
+  app.get("/api/lgpd/data", requireAuth, async (req: any, res: Response, next: NextFunction) => {
+    try {
+      const userId = req.user.id;
+      const allData = await storage.getAllUserData(userId);
+      
+      res.json({
+        profile: {
+          id: allData.user.id,
+          email: allData.user.email,
+          username: allData.user.username,
+          phone: allData.user.phone,
+          role: allData.user.role,
+          createdAt: allData.user.createdAt,
+          emailVerified: allData.user.emailVerified,
+          emailVerifiedAt: allData.user.emailVerifiedAt,
+          lastLoginAt: allData.user.lastLoginAt,
+        },
+        consents: {
+          marketing: allData.user.consentMarketing,
+          terms: allData.user.consentTerms,
+          privacy: allData.user.consentPrivacy,
+          consentAt: allData.user.consentAt,
+        },
+        accountStatus: {
+          deletedAt: allData.user.deletedAt,
+          anonymizedAt: allData.user.anonymizedAt,
+          retentionExpiresAt: allData.user.retentionExpiresAt,
+        },
+        orders: allData.orders.map(order => ({
+          id: order.id,
+          orderId: order.orderId,
+          date: order.date,
+          status: order.status,
+          total: order.total,
+          items: order.items,
+        })),
+        subscription: allData.subscriber ? {
+          email: allData.subscriber.email,
+          type: allData.subscriber.type,
+          status: allData.subscriber.status,
+          date: allData.subscriber.date,
+        } : null,
+        auditLogSummary: {
+          totalEvents: allData.auditLogs.length,
+          recentEvents: allData.auditLogs.slice(0, 10).map(log => ({
+            action: log.action,
+            createdAt: log.createdAt,
+          })),
+        },
+        dataExportRequests: allData.dataExportRequests.map(req => ({
+          id: req.id,
+          status: req.status,
+          requestedAt: req.requestedAt,
+          completedAt: req.completedAt,
+        })),
+      });
+    } catch (err) {
+      next(err);
+    }
+  });
+
   return httpServer;
 }

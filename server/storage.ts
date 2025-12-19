@@ -1,6 +1,6 @@
 import {
   users, categories, collections, products, journalPosts, subscribers,
-  customers, orders, branding, emailVerificationTokens, passwordResetTokens, auditLogs,
+  customers, orders, branding, emailVerificationTokens, passwordResetTokens, auditLogs, dataExportRequests,
   type User, type InsertUser,
   type Category, type InsertCategory,
   type Collection, type InsertCollection,
@@ -13,9 +13,10 @@ import {
   type EmailVerificationToken, type InsertEmailVerificationToken,
   type PasswordResetToken, type InsertPasswordResetToken,
   type InsertAuditLog,
+  type DataExportRequest, type AuditLog,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, isNotNull, asc, and, gt } from "drizzle-orm";
+import { eq, desc, isNotNull, asc, and, gt, gte } from "drizzle-orm";
 
 export interface IStorage {
   // Users
@@ -104,6 +105,25 @@ export interface IStorage {
   // User email verification
   getUserByEmail(email: string): Promise<User | undefined>;
   updateUserEmailVerified(userId: number, verified: boolean): Promise<void>;
+
+  // LGPD compliance methods
+  getUserConsentHistory(userId: number): Promise<{ user: User; auditLogs: AuditLog[] }>;
+  updateUserConsent(userId: number, consents: { consentMarketing?: boolean; consentTerms?: boolean; consentPrivacy?: boolean }): Promise<User>;
+  createDataExportRequest(userId: number): Promise<DataExportRequest>;
+  getDataExportRequest(requestId: number, userId: number): Promise<DataExportRequest | undefined>;
+  getRecentDataExportRequest(userId: number, withinHours: number): Promise<DataExportRequest | undefined>;
+  updateDataExportRequest(requestId: number, data: Partial<DataExportRequest>): Promise<DataExportRequest | undefined>;
+  anonymizeUser(userId: number): Promise<User>;
+  softDeleteUser(userId: number): Promise<User>;
+  getAllUserData(userId: number): Promise<{
+    user: Omit<User, 'password'>;
+    orders: any[];
+    subscriber: any | null;
+    auditLogs: AuditLog[];
+    dataExportRequests: DataExportRequest[];
+  }>;
+  getAuditLogsByUserId(userId: number): Promise<AuditLog[]>;
+  getDataExportRequestsByUserId(userId: number): Promise<DataExportRequest[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -471,6 +491,159 @@ export class DatabaseStorage implements IStorage {
       emailVerified: verified,
       emailVerifiedAt: verified ? new Date().toISOString() : null
     }).where(eq(users.id, userId));
+  }
+
+  // LGPD compliance methods
+  async getUserConsentHistory(userId: number): Promise<{ user: User; auditLogs: AuditLog[] }> {
+    const [user] = await db.select().from(users).where(eq(users.id, userId));
+    if (!user) {
+      throw new Error('Usuário não encontrado');
+    }
+    
+    const logs = await db.select().from(auditLogs)
+      .where(and(
+        eq(auditLogs.userId, userId),
+        eq(auditLogs.action, 'consent_update')
+      ))
+      .orderBy(desc(auditLogs.createdAt));
+    
+    return { user, auditLogs: logs };
+  }
+
+  async updateUserConsent(userId: number, consents: { consentMarketing?: boolean; consentTerms?: boolean; consentPrivacy?: boolean }): Promise<User> {
+    const [updated] = await db.update(users)
+      .set({
+        ...consents,
+        consentAt: new Date().toISOString(),
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    return updated;
+  }
+
+  async createDataExportRequest(userId: number): Promise<DataExportRequest> {
+    const [request] = await db.insert(dataExportRequests).values({
+      userId,
+      status: 'pending',
+      requestedAt: new Date().toISOString(),
+    }).returning();
+    return request;
+  }
+
+  async getDataExportRequest(requestId: number, userId: number): Promise<DataExportRequest | undefined> {
+    const [request] = await db.select().from(dataExportRequests)
+      .where(and(
+        eq(dataExportRequests.id, requestId),
+        eq(dataExportRequests.userId, userId)
+      ));
+    return request || undefined;
+  }
+
+  async getRecentDataExportRequest(userId: number, withinHours: number): Promise<DataExportRequest | undefined> {
+    const cutoff = new Date(Date.now() - withinHours * 60 * 60 * 1000).toISOString();
+    const [request] = await db.select().from(dataExportRequests)
+      .where(and(
+        eq(dataExportRequests.userId, userId),
+        gte(dataExportRequests.requestedAt, cutoff)
+      ))
+      .orderBy(desc(dataExportRequests.requestedAt))
+      .limit(1);
+    return request || undefined;
+  }
+
+  async updateDataExportRequest(requestId: number, data: Partial<DataExportRequest>): Promise<DataExportRequest | undefined> {
+    const [updated] = await db.update(dataExportRequests)
+      .set(data)
+      .where(eq(dataExportRequests.id, requestId))
+      .returning();
+    return updated || undefined;
+  }
+
+  async anonymizeUser(userId: number): Promise<User> {
+    const anonPrefix = `ANON_${userId}`;
+    const [updated] = await db.update(users)
+      .set({
+        username: `${anonPrefix}@anonymous.local`,
+        email: `${anonPrefix}@anonymous.local`,
+        phone: null,
+        password: 'ANONYMIZED',
+        anonymizedAt: new Date().toISOString(),
+        consentMarketing: false,
+        consentTerms: false,
+        consentPrivacy: false,
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    return updated;
+  }
+
+  async softDeleteUser(userId: number): Promise<User> {
+    const retentionDays = 30;
+    const [updated] = await db.update(users)
+      .set({
+        deletedAt: new Date().toISOString(),
+        retentionExpiresAt: new Date(Date.now() + retentionDays * 24 * 60 * 60 * 1000).toISOString(),
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    return updated;
+  }
+
+  async getAllUserData(userId: number): Promise<{
+    user: Omit<User, 'password'>;
+    orders: any[];
+    subscriber: any | null;
+    auditLogs: AuditLog[];
+    dataExportRequests: DataExportRequest[];
+  }> {
+    const [user] = await db.select().from(users).where(eq(users.id, userId));
+    if (!user) {
+      throw new Error('Usuário não encontrado');
+    }
+
+    const { password, ...userWithoutPassword } = user;
+
+    const userEmail = user.email || user.username;
+    const subscriber = userEmail 
+      ? await this.getSubscriberByEmail(userEmail.toLowerCase())
+      : null;
+
+    const customer = userEmail 
+      ? await this.getCustomerByEmail(userEmail.toLowerCase())
+      : null;
+
+    let userOrders: any[] = [];
+    if (customer) {
+      userOrders = await this.getOrdersByCustomerId(customer.id);
+    }
+
+    const logs = await db.select().from(auditLogs)
+      .where(eq(auditLogs.userId, userId))
+      .orderBy(desc(auditLogs.createdAt));
+
+    const exportRequests = await db.select().from(dataExportRequests)
+      .where(eq(dataExportRequests.userId, userId))
+      .orderBy(desc(dataExportRequests.requestedAt));
+
+    return {
+      user: userWithoutPassword,
+      orders: userOrders,
+      subscriber,
+      auditLogs: logs,
+      dataExportRequests: exportRequests,
+    };
+  }
+
+  async getAuditLogsByUserId(userId: number): Promise<AuditLog[]> {
+    return await db.select().from(auditLogs)
+      .where(eq(auditLogs.userId, userId))
+      .orderBy(desc(auditLogs.createdAt));
+  }
+
+  async getDataExportRequestsByUserId(userId: number): Promise<DataExportRequest[]> {
+    return await db.select().from(dataExportRequests)
+      .where(eq(dataExportRequests.userId, userId))
+      .orderBy(desc(dataExportRequests.requestedAt));
   }
 }
 
