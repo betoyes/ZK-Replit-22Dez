@@ -187,6 +187,25 @@ export default function Product() {
               {productHasVariations ? getCurrentDescription() : product.description}
             </p>
 
+            {/* Technical Specifications - Always visible */}
+            <div className="mb-8 border-t border-border pt-6">
+              <h3 className="font-mono text-xs uppercase tracking-widest mb-4">Especificações Técnicas</h3>
+              <ul className="space-y-2 text-muted-foreground font-light">
+                {(productHasVariations ? getCurrentSpecs() : ((product.specs as string[]) || [])).length > 0 ? (
+                  (productHasVariations ? getCurrentSpecs() : ((product.specs as string[]) || [])).map((spec: string, idx: number) => (
+                    <li key={idx}>{spec}</li>
+                  ))
+                ) : (
+                  <>
+                    <li>Material: Ouro 18K Sólido</li>
+                    <li>Gema: Diamante Certificado Livre de Conflitos</li>
+                    <li>Peso: Aprox. 5g</li>
+                    <li>Origem: Feito à mão na Itália</li>
+                  </>
+                )}
+              </ul>
+            </div>
+
             {/* Stone Type Selector - Dynamic */}
             {productHasVariations && (
               <div className="mb-8">
@@ -460,28 +479,9 @@ export default function Product() {
               </div>
             </div>
 
-            {/* Technical Details Accordion */}
+            {/* Additional Details Accordion */}
             <div className="border-t border-border">
               <Accordion type="single" collapsible className="w-full">
-                <AccordionItem value="details" className="border-b border-border">
-                  <AccordionTrigger className="font-mono text-xs uppercase tracking-widest py-6 hover:no-underline">Especificações Técnicas</AccordionTrigger>
-                  <AccordionContent className="text-muted-foreground font-light pb-6">
-                    <ul className="space-y-2">
-                      {(productHasVariations ? getCurrentSpecs() : ((product.specs as string[]) || [])).length > 0 ? (
-                        (productHasVariations ? getCurrentSpecs() : ((product.specs as string[]) || [])).map((spec: string, idx: number) => (
-                          <li key={idx}>{spec}</li>
-                        ))
-                      ) : (
-                        <>
-                          <li>Material: Ouro 18K Sólido</li>
-                          <li>Gema: Diamante Certificado Livre de Conflitos</li>
-                          <li>Peso: Aprox. 5g</li>
-                          <li>Origem: Feito à mão na Itália</li>
-                        </>
-                      )}
-                    </ul>
-                  </AccordionContent>
-                </AccordionItem>
                 <AccordionItem value="shipping" className="border-b border-border">
                   <AccordionTrigger className="font-mono text-xs uppercase tracking-widest py-6 hover:no-underline">Envio e Devoluções</AccordionTrigger>
                   <AccordionContent className="text-muted-foreground font-light pb-6">
