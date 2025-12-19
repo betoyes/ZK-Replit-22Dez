@@ -189,8 +189,8 @@ export async function registerRoutes(
     res.json({ csrfToken: req.session.csrfToken });
   });
 
-  // Customer registration endpoint
-  app.post("/api/auth/register", registerLimiter, csrfProtection, async (req: Request, res: Response, next: NextFunction) => {
+  // Customer registration endpoint (no CSRF - user not authenticated yet)
+  app.post("/api/auth/register", registerLimiter, async (req: Request, res: Response, next: NextFunction) => {
     const clientIp = getClientIp(req);
     const userAgent = getUserAgent(req);
     
@@ -319,8 +319,8 @@ export async function registerRoutes(
     }
   });
 
-  // Resend verification email
-  app.post("/api/auth/resend-verification", resendVerificationLimiter, csrfProtection, async (req: Request, res: Response, next: NextFunction) => {
+  // Resend verification email (no CSRF - user not authenticated yet)
+  app.post("/api/auth/resend-verification", resendVerificationLimiter, async (req: Request, res: Response, next: NextFunction) => {
     const clientIp = getClientIp(req);
     const userAgent = getUserAgent(req);
     
@@ -373,8 +373,8 @@ export async function registerRoutes(
     }
   });
 
-  // Request password reset
-  app.post("/api/auth/forgot-password", forgotPasswordLimiter, csrfProtection, async (req: Request, res: Response, next: NextFunction) => {
+  // Request password reset (no CSRF - user not authenticated yet)
+  app.post("/api/auth/forgot-password", forgotPasswordLimiter, async (req: Request, res: Response, next: NextFunction) => {
     const clientIp = getClientIp(req);
     const userAgent = getUserAgent(req);
     
@@ -446,8 +446,8 @@ export async function registerRoutes(
     }
   });
 
-  // Reset password
-  app.post("/api/auth/reset-password", resetPasswordLimiter, csrfProtection, async (req: Request, res: Response, next: NextFunction) => {
+  // Reset password (no CSRF - user not authenticated yet)
+  app.post("/api/auth/reset-password", resetPasswordLimiter, async (req: Request, res: Response, next: NextFunction) => {
     const clientIp = getClientIp(req);
     const userAgent = getUserAgent(req);
     
@@ -493,8 +493,8 @@ export async function registerRoutes(
     }
   });
 
-  // Login
-  app.post("/api/auth/login", loginLimiter, csrfProtection, async (req: Request, res: Response, next: NextFunction) => {
+  // Login (no CSRF - user not authenticated yet)
+  app.post("/api/auth/login", loginLimiter, async (req: Request, res: Response, next: NextFunction) => {
     const clientIp = getClientIp(req);
     const userAgent = getUserAgent(req);
     
