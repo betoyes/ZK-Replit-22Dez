@@ -141,7 +141,17 @@ export function ProductProvider({ children }: { children: ReactNode }) {
       });
       if (response.ok) {
         const updated = await response.json();
-        setProducts(prev => prev.map(p => (p.id === id ? updated : p)));
+        setProducts(prev => {
+          // Check if product exists in local state
+          const exists = prev.some(p => p.id === id);
+          if (exists) {
+            // Update existing product
+            return prev.map(p => (p.id === id ? updated : p));
+          } else {
+            // Product was cloned or created externally - add to list
+            return [...prev, updated];
+          }
+        });
       } else {
         console.error('Failed to update product:', await response.text());
       }
