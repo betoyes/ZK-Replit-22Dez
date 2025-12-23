@@ -2,6 +2,8 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage, logAuditEvent } from "./storage";
 import session from "express-session";
+import connectPgSimple from "connect-pg-simple";
+import { pool } from "./db";
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import bcrypt from "bcrypt";
@@ -101,15 +103,35 @@ export async function registerRoutes(
   app: Express
 ): Promise<Server> {
   
-  // Session configuration
+  // Validate SESSION_SECRET in production
+  if (process.env.NODE_ENV === "production" && !process.env.SESSION_SECRET) {
+    throw new Error("SESSION_SECRET must be set in production environment");
+  }
+  
+  const sessionSecret = process.env.SESSION_SECRET;
+  if (!sessionSecret) {
+    throw new Error("SESSION_SECRET environment variable is required");
+  }
+
+  // Initialize PostgreSQL session store
+  const PgSession = connectPgSimple(session);
+  
+  // Session configuration with PostgreSQL store
   app.use(
     session({
-      secret: process.env.SESSION_SECRET || "zk-rezk-luxury-jewelry-secret-2026",
+      store: new PgSession({
+        pool: pool as any,
+        tableName: "session",
+        createTableIfMissing: true,
+      }),
+      secret: sessionSecret,
       resave: false,
       saveUninitialized: false,
+      proxy: true,
       cookie: {
         secure: process.env.NODE_ENV === "production",
         httpOnly: true,
+        sameSite: "lax",
         maxAge: 24 * 60 * 60 * 1000, // 24 hours
       },
     })
