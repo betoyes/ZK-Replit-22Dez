@@ -89,14 +89,14 @@ export interface IStorage {
   getBranding(): Promise<Branding | undefined>;
   createOrUpdateBranding(branding: InsertBranding): Promise<Branding>;
 
-  // Email Verification Tokens (kept for backward compatibility, but no longer used)
+  // Email Verification Tokens (stores hashed tokens only)
   createEmailVerificationToken(token: InsertEmailVerificationToken): Promise<EmailVerificationToken>;
-  getEmailVerificationToken(token: string): Promise<EmailVerificationToken | undefined>;
+  getEmailVerificationTokenByHash(tokenHash: string): Promise<EmailVerificationToken | undefined>;
   deleteEmailVerificationTokensByUserId(userId: number): Promise<void>;
 
-  // Password Reset Tokens
+  // Password Reset Tokens (stores hashed tokens only)
   createPasswordResetToken(token: InsertPasswordResetToken): Promise<PasswordResetToken>;
-  getPasswordResetToken(token: string): Promise<PasswordResetToken | undefined>;
+  getPasswordResetTokenByHash(tokenHash: string): Promise<PasswordResetToken | undefined>;
   markPasswordResetTokenUsed(id: number): Promise<void>;
   deletePasswordResetTokensByUserId(userId: number): Promise<void>;
   invalidatePasswordResetTokensByUserId(userId: number): Promise<void>;
@@ -432,15 +432,15 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  // Email Verification Tokens
+  // Email Verification Tokens (stores hashed tokens only)
   async createEmailVerificationToken(token: InsertEmailVerificationToken): Promise<EmailVerificationToken> {
     const [created] = await db.insert(emailVerificationTokens).values(token).returning();
     return created;
   }
 
-  async getEmailVerificationToken(token: string): Promise<EmailVerificationToken | undefined> {
+  async getEmailVerificationTokenByHash(tokenHash: string): Promise<EmailVerificationToken | undefined> {
     const [tokenData] = await db.select().from(emailVerificationTokens)
-      .where(eq(emailVerificationTokens.token, token));
+      .where(eq(emailVerificationTokens.tokenHash, tokenHash));
     return tokenData || undefined;
   }
 
@@ -449,16 +449,16 @@ export class DatabaseStorage implements IStorage {
   }
 
 
-  // Password Reset Tokens
+  // Password Reset Tokens (stores hashed tokens only)
   async createPasswordResetToken(token: InsertPasswordResetToken): Promise<PasswordResetToken> {
     const [created] = await db.insert(passwordResetTokens).values(token).returning();
     return created;
   }
 
-  async getPasswordResetToken(token: string): Promise<PasswordResetToken | undefined> {
+  async getPasswordResetTokenByHash(tokenHash: string): Promise<PasswordResetToken | undefined> {
     const [tokenData] = await db.select().from(passwordResetTokens)
       .where(and(
-        eq(passwordResetTokens.token, token),
+        eq(passwordResetTokens.tokenHash, tokenHash),
         eq(passwordResetTokens.used, false)
       ));
     return tokenData || undefined;

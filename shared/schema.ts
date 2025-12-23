@@ -255,7 +255,7 @@ export type Branding = typeof branding.$inferSelect;
 export const emailVerificationTokens = pgTable("email_verification_tokens", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id).notNull(),
-  token: text("token").notNull().unique(),
+  tokenHash: text("token_hash").notNull().unique(),
   expiresAt: text("expires_at").notNull(),
   createdAt: text("created_at").notNull(),
 });
@@ -268,7 +268,7 @@ export type EmailVerificationToken = typeof emailVerificationTokens.$inferSelect
 export const passwordResetTokens = pgTable("password_reset_tokens", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id).notNull(),
-  token: text("token").notNull().unique(),
+  tokenHash: text("token_hash").notNull().unique(),
   expiresAt: text("expires_at").notNull(),
   createdAt: text("created_at").notNull(),
   used: boolean("used").default(false),
